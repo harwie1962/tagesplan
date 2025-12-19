@@ -6,9 +6,8 @@
   <title>Tagesplan Erinnerungen - 1500 kcal</title>
 
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
+    *{margin:0;padding:0;box-sizing:border-box;}
 
-    /* ========= THEME: DEFAULT (ruhiger, technisch) ========= */
     body{
       font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
       background:
@@ -24,13 +23,11 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* ========= THEME: MEDICAL (GRÜN) – UNVERÄNDERT ========= */
     body.medical{
       background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%);
       color:#102014;
     }
 
-    /* WICHTIG: backdrop-filter raus -> deutlich flüssiger */
     .container{
       max-width:820px;
       margin:0 auto;
@@ -62,11 +59,7 @@
       border-bottom:0;
     }
 
-    .header h1{
-      font-size:26px;
-      margin-bottom:10px;
-      letter-spacing:.2px;
-    }
+    .header h1{ font-size:26px; margin-bottom:10px; letter-spacing:.2px; }
 
     .current-time{
       font-size:46px;
@@ -82,6 +75,7 @@
       border:1px solid rgba(255,255,255,.18);
       border-radius:12px;
       display:inline-block;
+      margin-bottom:10px;
     }
 
     .sound-toggle{
@@ -92,143 +86,14 @@
       background:rgba(255,255,255,.10);
       border:1px solid rgba(255,255,255,.16);
       border-radius:12px;
-      margin-top:12px;
+      margin-top:10px;
       flex-wrap:wrap;
       justify-content:center;
     }
     .sound-toggle input{ width:20px; height:20px; cursor:pointer; }
 
-    .content{
-      padding:26px;
-      color:#0e172a;
-    }
+    .content{ padding:26px; color:#0e172a; }
     body.medical .content{ color:#0e1b12; }
-
-    .next-item{
-      background:
-        linear-gradient(135deg, rgba(15,23,42,.96) 0%, rgba(30,41,59,.96) 100%),
-        radial-gradient(700px 220px at 15% 10%, rgba(110,231,255,.25), transparent 60%),
-        radial-gradient(700px 220px at 85% 10%, rgba(167,139,250,.22), transparent 60%);
-      color:#fff;
-      padding:22px;
-      border-radius:16px;
-      margin-bottom:26px;
-      box-shadow:0 14px 36px rgba(0,0,0,.25);
-      transition:background .5s ease, box-shadow .5s ease;
-      border:1px solid rgba(255,255,255,.10);
-    }
-    body.medical .next-item{
-      background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);
-      box-shadow:0 10px 30px rgba(76,175,80,.3);
-      border:0;
-    }
-
-    .next-item h2{
-      font-size:18px;
-      margin-bottom:12px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      letter-spacing:.2px;
-    }
-    .next-item h2::before{ content:"⏰"; font-size:22px; }
-
-    .next-item .time{
-      font-size:30px;
-      font-weight:800;
-      margin-bottom:8px;
-      letter-spacing:.3px;
-    }
-    .next-item .description{ font-size:15px; line-height:1.6; opacity:.96; }
-
-    .timeline{ position:relative; padding-left:38px; }
-    .timeline::before{
-      content:"";
-      position:absolute;
-      left:14px;
-      top:0;
-      bottom:0;
-      width:3px;
-      background:linear-gradient(180deg, rgba(110,231,255,.85) 0%, rgba(167,139,250,.85) 55%, rgba(34,197,94,.65) 100%);
-      transition:background .5s ease;
-      border-radius:3px;
-    }
-    body.medical .timeline::before{
-      background:linear-gradient(180deg,#66bb6a 0%,#388e3c 100%);
-    }
-
-    .timeline-item{
-      position:relative;
-      padding:14px 14px 12px;
-      margin-bottom:12px;
-      background:#f6f7fb;
-      border:1px solid rgba(15,23,42,.08);
-      border-radius:12px;
-      transition:background .2s ease; /* weniger teuer als "all" */
-    }
-    .timeline-item::before{
-      content:"";
-      position:absolute;
-      left:-31px;
-      top:18px;
-      width:14px;
-      height:14px;
-      border-radius:50%;
-      background:#fff;
-      border:3px solid rgba(110,231,255,.9);
-      transition:border-color .3s ease, background .3s ease;
-      box-shadow:0 2px 8px rgba(0,0,0,.12);
-    }
-    body.medical .timeline-item::before{ border-color:#4caf50; }
-
-    /* Hover im Default entschärft -> weniger ruckeln beim Scrollen */
-    .timeline-item:hover{
-      background:#ffffff;
-      box-shadow:none;
-      transform:none;
-    }
-
-    .timeline-item.completed{ opacity:.55; background:#eef0f6; }
-    .timeline-item.completed::before{ background:#22c55e; border-color:#22c55e; }
-
-    .timeline-item.current{
-      background:linear-gradient(135deg,#e8f1ff 0%, #f3e8ff 70%, #e8fff1 100%);
-      box-shadow:0 10px 22px rgba(2,6,23,.12);
-      border-color:rgba(110,231,255,.35);
-    }
-    body.medical .timeline-item.current{
-      background:linear-gradient(135deg,#c8e6c9 0%,#a5d6a7 100%);
-      box-shadow:0 5px 15px rgba(165,214,167,.4);
-      border-color:transparent;
-    }
-    .timeline-item.current::before{
-      background:rgba(110,231,255,.95);
-      border-color:rgba(110,231,255,.95);
-      animation:pulse 2s infinite;
-    }
-    body.medical .timeline-item.current::before{
-      background:#2e7d32;
-      border-color:#2e7d32;
-    }
-    @keyframes pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
-
-    .timeline-item .time{
-      font-weight:800;
-      color:#0b1220;
-      font-size:16px;
-      margin-bottom:6px;
-    }
-    body.medical .timeline-item .time{ color:#1b5e20; }
-    .timeline-item .description{ color:#111827; font-size:13.5px; line-height:1.5; }
-    body.medical .timeline-item .description{ color:#102014; }
-
-    .timeline-item .calories{
-      color:#2563eb;
-      font-weight:800;
-      margin-top:6px;
-      font-size:12.5px;
-    }
-    body.medical .timeline-item .calories{ color:#1b5e20; }
 
     .controls{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
 
@@ -241,6 +106,7 @@
       transition:transform .2s ease, box-shadow .2s ease;
       font-weight:800;
       letter-spacing:.1px;
+      user-select:none;
     }
 
     .btn-primary{
@@ -252,14 +118,7 @@
       background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);
       box-shadow:none;
     }
-
-    .btn-primary:hover{
-      transform:translateY(-2px);
-      box-shadow:0 14px 30px rgba(2,6,23,.22);
-    }
-    body.medical .btn-primary:hover{
-      box-shadow:0 5px 15px rgba(76,175,80,.4);
-    }
+    .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 14px 30px rgba(2,6,23,.22); }
 
     .btn-secondary{
       background:#eef2f7;
@@ -267,6 +126,12 @@
       border:1px solid rgba(15,23,42,.10);
     }
     .btn-secondary:hover{ background:#e6ebf3; transform:translateY(-1px); }
+
+    .btn-mini{
+      padding:10px 14px;
+      border-radius:12px;
+      font-size:14px;
+    }
 
     .notification-permission{
       background:#fff3cd;
@@ -306,6 +171,106 @@
 
     .hint{ margin-top:10px; font-size:12.5px; color:#374151; line-height:1.45; }
     .hint code{ background:rgba(0,0,0,.06); padding:2px 6px; border-radius:8px; }
+
+    .daybar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-top:10px;
+    }
+    .daybar .btn{ font-weight:800; }
+    .daybar .btn.active{
+      outline:3px solid rgba(110,231,255,.45);
+      transform:translateY(-1px);
+    }
+    body.medical .daybar .btn.active{ outline:3px solid rgba(76,175,80,.45); }
+
+    .next-item{
+      background:
+        linear-gradient(135deg, rgba(15,23,42,.96) 0%, rgba(30,41,59,.96) 100%),
+        radial-gradient(700px 220px at 15% 10%, rgba(110,231,255,.25), transparent 60%),
+        radial-gradient(700px 220px at 85% 10%, rgba(167,139,250,.22), transparent 60%);
+      color:#fff;
+      padding:22px;
+      border-radius:16px;
+      margin-bottom:26px;
+      box-shadow:0 14px 36px rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    body.medical .next-item{
+      background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);
+      box-shadow:0 10px 30px rgba(76,175,80,.3);
+      border:0;
+    }
+    .next-item h2{ font-size:18px; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+    .next-item h2::before{ content:"⏰"; font-size:22px; }
+    .next-item .time{ font-size:30px; font-weight:800; margin-bottom:8px; }
+    .next-item .description{ font-size:15px; line-height:1.6; opacity:.96; }
+
+    .timeline{ position:relative; padding-left:38px; }
+    .timeline::before{
+      content:"";
+      position:absolute;
+      left:14px;
+      top:0;
+      bottom:0;
+      width:3px;
+      background:linear-gradient(180deg, rgba(110,231,255,.85) 0%, rgba(167,139,250,.85) 55%, rgba(34,197,94,.65) 100%);
+      border-radius:3px;
+    }
+    body.medical .timeline::before{ background:linear-gradient(180deg,#66bb6a 0%,#388e3c 100%); }
+
+    .timeline-item{
+      position:relative;
+      padding:14px 14px 12px;
+      margin-bottom:12px;
+      background:#f6f7fb;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:12px;
+      transition:background .2s ease;
+    }
+    .timeline-item::before{
+      content:"";
+      position:absolute;
+      left:-31px;
+      top:18px;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:#fff;
+      border:3px solid rgba(110,231,255,.9);
+      box-shadow:0 2px 8px rgba(0,0,0,.12);
+    }
+    body.medical .timeline-item::before{ border-color:#4caf50; }
+
+    .timeline-item.completed{ opacity:.55; background:#eef0f6; }
+    .timeline-item.completed::before{ background:#22c55e; border-color:#22c55e; }
+
+    .timeline-item.current{
+      background:linear-gradient(135deg,#e8f1ff 0%, #f3e8ff 70%, #e8fff1 100%);
+      box-shadow:0 10px 22px rgba(2,6,23,.12);
+      border-color:rgba(110,231,255,.35);
+    }
+    body.medical .timeline-item.current{
+      background:linear-gradient(135deg,#c8e6c9 0%,#a5d6a7 100%);
+      box-shadow:0 5px 15px rgba(165,214,167,.4);
+      border-color:transparent;
+    }
+    .timeline-item.current::before{
+      background:rgba(110,231,255,.95);
+      border-color:rgba(110,231,255,.95);
+      animation:pulse 2s infinite;
+    }
+    body.medical .timeline-item.current::before{ background:#2e7d32; border-color:#2e7d32; }
+    @keyframes pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+
+    .timeline-item .time{ font-weight:800; color:#0b1220; font-size:16px; margin-bottom:6px; }
+    body.medical .timeline-item .time{ color:#1b5e20; }
+    .timeline-item .description{ color:#111827; font-size:13.5px; line-height:1.5; }
+    body.medical .timeline-item .description{ color:#102014; }
+    .timeline-item .calories{ color:#2563eb; font-weight:800; margin-top:6px; font-size:12.5px; }
+    body.medical .timeline-item .calories{ color:#1b5e20; }
   </style>
 </head>
 
@@ -315,6 +280,19 @@
       <h1>🍽️ Dein Tagesplan</h1>
       <div class="current-time" id="currentTime">00:00:00</div>
       <div class="status" id="status">Lädt...</div>
+
+      <!-- Tag-Schalter -->
+      <div class="daybar" id="daybar">
+        <button class="btn btn-secondary btn-mini" data-day="auto" onclick="setDayOverride('auto')">Auto</button>
+        <button class="btn btn-secondary btn-mini" data-day="mon" onclick="setDayOverride('mon')">Mo</button>
+        <button class="btn btn-secondary btn-mini" data-day="tue" onclick="setDayOverride('tue')">Di</button>
+        <button class="btn btn-secondary btn-mini" data-day="wed" onclick="setDayOverride('wed')">Mi</button>
+        <button class="btn btn-secondary btn-mini" data-day="thu" onclick="setDayOverride('thu')">Do</button>
+        <button class="btn btn-secondary btn-mini" data-day="fri" onclick="setDayOverride('fri')">Fr</button>
+        <button class="btn btn-secondary btn-mini" data-day="sat" onclick="setDayOverride('sat')">Sa</button>
+        <button class="btn btn-secondary btn-mini" data-day="sun" onclick="setDayOverride('sun')">So</button>
+      </div>
+
       <div class="sound-toggle">
         <input type="checkbox" id="soundToggle" checked onchange="toggleSound()" />
         <label for="soundToggle" style="cursor:pointer;">🔊 Signalton aktiviert</label>
@@ -333,11 +311,22 @@
       <div class="offset-panel">
         <h3>⏱️ Verschlafen-Modus (Zeitversatz)</h3>
 
+        <!-- MORGEN Offset per Aufsteh-Zeit -->
         <div class="offset-row">
           <label for="anchorTime">Ich bin aufgestanden um</label>
           <input type="time" id="anchorTime" />
-          <button class="btn btn-primary" onclick="applyOffsetFromAnchor()">Offset setzen</button>
-          <button class="btn btn-secondary" onclick="resetOffset()">Offset zurücksetzen</button>
+          <button class="btn btn-primary" onclick="applyOffsetFromAnchor()">Morgen-Offset setzen</button>
+          <button class="btn btn-secondary" onclick="resetOffset()">Offsets zurücksetzen</button>
+        </div>
+
+        <!-- NACHMITTAG Offset +/- -->
+        <div class="offset-row" style="margin-top:10px;">
+          <label style="min-width:160px;">Ab Mittag verschieben</label>
+          <button class="btn btn-secondary btn-mini" onclick="shiftAfternoon(-15)">−15</button>
+          <button class="btn btn-secondary btn-mini" onclick="shiftAfternoon(-5)">−5</button>
+          <button class="btn btn-secondary btn-mini" onclick="shiftAfternoon(+5)">+5</button>
+          <button class="btn btn-secondary btn-mini" onclick="shiftAfternoon(+15)">+15</button>
+          <span id="afternoonLabel" style="font-weight:800;">0 min</span>
         </div>
 
         <div class="offset-row" style="margin-top:10px;">
@@ -348,9 +337,9 @@
         </div>
 
         <div class="hint">
-          Standard: Offset wirkt nur auf Zeiten <code>vor 12:00</code> (ab Mittag bleibt der Grundplan).
-          Optional kannst du den Haken setzen, dann gilt der Offset für den ganzen Tag.
-          Speichert automatisch im Browser (localStorage).
+          Standard: Morgen-Offset wirkt auf Zeiten <code>vor 12:00</code>.
+          Ab Mittag kannst du alles mit +/- nach vorne/hinten schieben.
+          Optional: Haken setzt, dann gilt Morgen-Offset für Vormittag und Nachmittag-Offset für den Rest.
         </div>
       </div>
 
@@ -360,18 +349,6 @@
         <button class="btn btn-secondary" onclick="scrollToNext()">⬇️ Zum nächsten Punkt</button>
       </div>
 
-	<!-- NEU: Tages-Schalter -->
-	<div class="controls" style="margin-top:10px;">
-	  <button class="btn btn-secondary" onclick="setDay('mon')">Mo</button>
-	  <button class="btn btn-secondary" onclick="setDay('tue')">Di</button>
-	  <button class="btn btn-secondary" onclick="setDay('wed')">Mi</button>
-	  <button class="btn btn-secondary" onclick="setDay('thu')">Do</button>
-	  <button class="btn btn-secondary" onclick="setDay('fri')">Fr</button>
-	  <button class="btn btn-secondary" onclick="setDay('sat')">Sa</button>
-	  <button class="btn btn-secondary" onclick="setDay('sun')">So</button>
-	  <button class="btn btn-primary" onclick="setDay('auto')">Auto</button>
-	</div>
-
       <div id="nextItem"></div>
 
       <h3 style="margin-bottom:18px;color:#111827;">📋 Tagesübersicht</h3>
@@ -380,82 +357,110 @@
   </div>
 
   <script>
-  let schedule = []; // wird durch Tagesdatei gefüllt
+    // =========================
+    // Globale Plan-Variable
+    // =========================
+    let schedule = []; // wird aus plans/<day>.js geladen (dort: window.schedule = [...])
 
-    // ===== NEU: Scroll-Detektor (damit Timeline beim Scrollen nicht dauernd neu gerendert wird) =====
+    // =========================
+    // Keys / Konstanten
+    // =========================
+    const PLAN_START = "06:15";
+    const MORNING_CUTOFF = "12:00";
+
+    const OFFSET_KEY = "scheduleOffsetMin";
+    const ANCHOR_KEY = "scheduleAnchorTime";
+
+    const AFTERNOON_KEY = "scheduleAfternoonOffsetMin";
+
+    const APPLY_ALL_KEY = "scheduleOffsetApplyAllDay";
+
+    const DAY_OVERRIDE_KEY = "scheduleDayOverride"; // auto|mon|tue|...
+
+    // =========================
+    // States
+    // =========================
+    let offsetMinutes = 0;            // Morgen-Offset
+    let afternoonOffsetMinutes = 0;   // Nachmittag-Offset
+    let applyAllDay = false;
+
+    let lastNotifiedIndex = -1;
+    let soundEnabled = true;
+
+    // Scroll-Detektor (damit Timeline beim Scrollen nicht dauernd neu gerendert wird)
     let isScrolling = false;
     let scrollTimer = null;
     window.addEventListener("scroll", () => {
       isScrolling = true;
       if (scrollTimer) clearTimeout(scrollTimer);
       scrollTimer = setTimeout(() => { isScrolling = false; }, 180);
-    }, { passive: true });
+    }, { passive:true });
 
-   
-    // ===== Offset-Logik: Standard nur morgens bis 12:00, optional ganzer Tag =====
-    const PLAN_START = "06:15";
-    const OFFSET_KEY = "scheduleOffsetMin";
-    const ANCHOR_KEY = "scheduleAnchorTime";
-
-    const APPLY_ALL_KEY = "scheduleOffsetApplyAllDay";
-    const MORNING_CUTOFF = "12:00";
-
-    let offsetMinutes = 0;
-    let applyAllDay = false;
-
-    let lastNotifiedIndex = -1;
-    let soundEnabled = true;
-
-    function getTimeInMinutes(timeStr) {
-      const [h, m] = timeStr.split(":").map(Number);
-      return h * 60 + m;
+    // =========================
+    // Time helpers
+    // =========================
+    function getTimeInMinutes(timeStr){
+      const [h,m] = timeStr.split(":").map(Number);
+      return h*60+m;
     }
-
-    function minutesToHHMM(totalMinutes) {
+    function minutesToHHMM(totalMinutes){
       const mod = ((totalMinutes % 1440) + 1440) % 1440;
-      const h = String(Math.floor(mod / 60)).padStart(2, "0");
-      const m = String(mod % 60).padStart(2, "0");
+      const h = String(Math.floor(mod/60)).padStart(2,"0");
+      const m = String(mod%60).padStart(2,"0");
       return `${h}:${m}`;
     }
-
-    function getCurrentMinutes() {
+    function getCurrentMinutes(){
       const now = new Date();
-      return now.getHours() * 60 + now.getMinutes();
+      return now.getHours()*60 + now.getMinutes();
     }
 
-    function getPerItemOffset(item) {
-      if (applyAllDay) return offsetMinutes;
-
+    // =========================
+    // Offset-Logik
+    // =========================
+    function getPerItemOffset(item){
       const baseMin = getTimeInMinutes(item.time);
       const cutoffMin = getTimeInMinutes(MORNING_CUTOFF);
 
-      return baseMin < cutoffMin ? offsetMinutes : 0;
+      // Variante B: Vormittag = offsetMinutes, Nachmittag = afternoonOffsetMinutes
+      // applyAllDay beeinflusst hier nur, ob "Morgen/Anchor" gespeichert bleibt – Logik ist gleich.
+      return baseMin < cutoffMin ? offsetMinutes : afternoonOffsetMinutes;
     }
 
-    function getEffectiveItemMinutes(item) {
+    function getEffectiveItemMinutes(item){
       const perOffset = getPerItemOffset(item);
       return ((getTimeInMinutes(item.time) + perOffset) % 1440 + 1440) % 1440;
     }
-
-    function getEffectiveItemTimeStr(item) {
+    function getEffectiveItemTimeStr(item){
       const perOffset = getPerItemOffset(item);
       return minutesToHHMM(getTimeInMinutes(item.time) + perOffset);
     }
 
-    function saveOffset(mins, anchorTimeStr) {
+    function saveOffset(mins, anchorTimeStr){
       offsetMinutes = mins;
       localStorage.setItem(OFFSET_KEY, String(mins));
-      if (anchorTimeStr) localStorage.setItem(ANCHOR_KEY, anchorTimeStr);
+      if (anchorTimeStr !== undefined){
+        if (anchorTimeStr) localStorage.setItem(ANCHOR_KEY, anchorTimeStr);
+        else localStorage.removeItem(ANCHOR_KEY);
+      }
     }
 
-    function saveApplyAllDay(value) {
+    function saveAfternoonOffset(mins){
+      afternoonOffsetMinutes = mins;
+      localStorage.setItem(AFTERNOON_KEY, String(mins));
+      updateAfternoonLabel();
+    }
+
+    function saveApplyAllDay(value){
       applyAllDay = !!value;
       localStorage.setItem(APPLY_ALL_KEY, applyAllDay ? "true" : "false");
     }
 
-    function loadOffset() {
+    function loadOffset(){
       const saved = localStorage.getItem(OFFSET_KEY);
-      offsetMinutes = saved !== null ? parseInt(saved, 10) || 0 : 0;
+      offsetMinutes = saved !== null ? (parseInt(saved,10) || 0) : 0;
+
+      const savedAfter = localStorage.getItem(AFTERNOON_KEY);
+      afternoonOffsetMinutes = savedAfter !== null ? (parseInt(savedAfter,10) || 0) : 0;
 
       const anchor = localStorage.getItem(ANCHOR_KEY);
       const anchorInput = document.getElementById("anchorTime");
@@ -465,25 +470,33 @@
       applyAllDay = savedApplyAll === "true";
       const applyAllEl = document.getElementById("applyAllDay");
       if (applyAllEl) applyAllEl.checked = applyAllDay;
+
+      updateAfternoonLabel();
     }
 
-    function toggleApplyAllDay() {
+    function updateAfternoonLabel(){
+      const el = document.getElementById("afternoonLabel");
+      if (!el) return;
+      const v = afternoonOffsetMinutes || 0;
+      el.textContent = `${v} min`;
+    }
+
+    function toggleApplyAllDay(){
       const el = document.getElementById("applyAllDay");
       saveApplyAllDay(el && el.checked);
-
       lastNotifiedIndex = -1;
       updateTimeline();
       updateNextItem();
     }
 
-    function applyOffsetFromAnchor() {
+    function applyOffsetFromAnchor(){
       const anchorInput = document.getElementById("anchorTime");
       if (!anchorInput || !anchorInput.value) return;
 
       const actualStart = getTimeInMinutes(anchorInput.value);
       const planStart = getTimeInMinutes(PLAN_START);
-
       const mins = actualStart - planStart;
+
       saveOffset(mins, anchorInput.value);
 
       lastNotifiedIndex = -1;
@@ -491,9 +504,9 @@
       updateNextItem();
     }
 
-    function resetOffset() {
+    function resetOffset(){
       saveOffset(0, "");
-      localStorage.removeItem(ANCHOR_KEY);
+      saveAfternoonOffset(0);
 
       const anchorInput = document.getElementById("anchorTime");
       if (anchorInput) anchorInput.value = "";
@@ -503,46 +516,52 @@
       updateNextItem();
     }
 
-    // ===== Anzeige-Logik =====
-    function updateTime() {
+    // Nachmittag +/- Buttons
+    function shiftAfternoon(delta){
+      saveAfternoonOffset((afternoonOffsetMinutes || 0) + delta);
+      lastNotifiedIndex = -1;
+      updateTimeline();
+      updateNextItem();
+    }
+
+    // =========================
+    // Anzeige-Logik
+    // =========================
+    function updateTime(){
       const now = new Date();
       document.getElementById("currentTime").textContent = now.toLocaleTimeString("de-DE");
     }
 
-    function findCurrentAndNext() {
+    function findCurrentAndNext(){
       const currentMinutes = getCurrentMinutes();
 
-      const indexed = schedule.map((item, index) => ({
-        item, index,
-        eff: getEffectiveItemMinutes(item)
-      }));
+      const indexed = schedule.map((item,index)=>({ item, index, eff:getEffectiveItemMinutes(item) }));
+      indexed.sort((a,b)=>a.eff-b.eff);
 
-      indexed.sort((a, b) => a.eff - b.eff);
-
-      const next = indexed.find(x => x.eff > currentMinutes);
+      const next = indexed.find(x=>x.eff>currentMinutes);
       const nextIndex = next ? next.index : -1;
 
       let currentSortedPos = -1;
-      for (let i = 0; i < indexed.length; i++) {
+      for (let i=0;i<indexed.length;i++){
         if (indexed[i].eff <= currentMinutes) currentSortedPos = i;
       }
-      const currentIndex = currentSortedPos >= 0 ? indexed[currentSortedPos].index : -1;
+      const currentIndex = currentSortedPos>=0 ? indexed[currentSortedPos].index : -1;
 
-      return { currentIndex, nextIndex, sorted: indexed };
+      return { currentIndex, nextIndex, sorted:indexed };
     }
 
-    function updateTimeline() {
+    function updateTimeline(){
       const timeline = document.getElementById("timeline");
       const { currentIndex, sorted } = findCurrentAndNext();
       timeline.innerHTML = "";
 
-      sorted.forEach(({ item, index }) => {
+      sorted.forEach(({item,index})=>{
         const div = document.createElement("div");
         div.className = "timeline-item";
         div.id = `item-${index}`;
 
-        const currentPos = sorted.findIndex(x => x.index === currentIndex);
-        const thisPos = sorted.findIndex(x => x.index === index);
+        const currentPos = sorted.findIndex(x=>x.index===currentIndex);
+        const thisPos = sorted.findIndex(x=>x.index===index);
 
         if (currentIndex !== -1 && thisPos < currentPos) div.classList.add("completed");
         if (index === currentIndex) div.classList.add("current");
@@ -561,12 +580,12 @@
       });
     }
 
-    function updateNextItem() {
+    function updateNextItem(){
       const { nextIndex } = findCurrentAndNext();
       const nextItemDiv = document.getElementById("nextItem");
       const statusDiv = document.getElementById("status");
 
-      if (nextIndex === -1) {
+      if (nextIndex === -1){
         nextItemDiv.innerHTML = `
           <div class="next-item">
             <h2>✅ Tagesplan abgeschlossen!</h2>
@@ -598,18 +617,16 @@
         </div>
       `;
 
-      if (minutesUntil <= 0) {
-        statusDiv.textContent = "⏰ JETZT!";
-      } else if (minutesUntil < 60) {
-        statusDiv.textContent = `⏰ In ${minutesUntil} Minuten`;
-      } else {
-        const hours = Math.floor(minutesUntil / 60);
-        const mins = minutesUntil % 60;
+      if (minutesUntil <= 0) statusDiv.textContent = "⏰ JETZT!";
+      else if (minutesUntil < 60) statusDiv.textContent = `⏰ In ${minutesUntil} Minuten`;
+      else {
+        const hours = Math.floor(minutesUntil/60);
+        const mins = minutesUntil%60;
         statusDiv.textContent = `⏰ In ${hours}h ${mins}min`;
       }
     }
 
-    function checkForNotifications() {
+    function checkForNotifications(){
       if (Notification.permission !== "granted") return;
 
       const { nextIndex } = findCurrentAndNext();
@@ -623,15 +640,20 @@
       if (minutesUntil < -720) minutesUntil += 1440;
       if (minutesUntil < 0) minutesUntil += 1440;
 
-      if (minutesUntil <= 0 || minutesUntil <= 2) {
+      if (minutesUntil <= 0 || minutesUntil <= 2){
         sendNotification(nextItem);
         lastNotifiedIndex = nextIndex;
       }
     }
 
-    // ===== Sound / Notification / Theme =====
-    function playSound() {
-      try {
+    // =========================
+    // Sound / Notification / Theme
+    // =========================
+    // Lautstärke hier einstellen: 0.05 = sehr leise, 0.5 = laut
+    const BEEP_VOLUME = 0.30;
+
+    function playSound(){
+      try{
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === "suspended") audioContext.resume();
 
@@ -641,71 +663,70 @@
         gainNode1.connect(audioContext.destination);
         oscillator1.frequency.value = 800;
         oscillator1.type = "sine";
-        gainNode1.gain.setValueAtTime(0.5, audioContext.currentTime);
+        gainNode1.gain.setValueAtTime(BEEP_VOLUME, audioContext.currentTime);
         gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
         oscillator1.start(audioContext.currentTime);
         oscillator1.stop(audioContext.currentTime + 0.3);
 
-        setTimeout(() => {
+        setTimeout(()=>{
           const oscillator2 = audioContext.createOscillator();
           const gainNode2 = audioContext.createGain();
           oscillator2.connect(gainNode2);
           gainNode2.connect(audioContext.destination);
           oscillator2.frequency.value = 600;
           oscillator2.type = "sine";
-          gainNode2.gain.setValueAtTime(0.5, audioContext.currentTime);
+          gainNode2.gain.setValueAtTime(BEEP_VOLUME, audioContext.currentTime);
           gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
           oscillator2.start(audioContext.currentTime);
           oscillator2.stop(audioContext.currentTime + 0.4);
         }, 200);
-      } catch (e) {
+      }catch(e){
         console.error("Sound-Fehler:", e);
       }
     }
 
-    function sendNotification(item) {
+    function sendNotification(item){
       if (soundEnabled) playSound();
       const effTime = getEffectiveItemTimeStr(item);
 
       const notification = new Notification("🍽️ Tagesplan Erinnerung", {
         body: `${effTime} Uhr: ${item.title}${item.description ? "\n" + item.description : ""}`,
-        icon: "🔔",
         tag: "meal-reminder",
         requireInteraction: true
       });
 
-      notification.onclick = function () {
+      notification.onclick = function(){
         window.focus();
         notification.close();
       };
     }
 
-    function requestNotificationPermission() {
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
+    function requestNotificationPermission(){
+      Notification.requestPermission().then(permission=>{
+        if (permission === "granted"){
           document.getElementById("notificationAlert").classList.remove("show");
           alert("✅ Benachrichtigungen aktiviert!");
         }
       });
     }
 
-    function testNotification() {
-      if (Notification.permission === "granted") {
+    function testNotification(){
+      if (Notification.permission === "granted"){
         if (soundEnabled) playSound();
-        new Notification("🍽️ Test-Benachrichtigung", { body: "Die Benachrichtigungen funktionieren!", icon: "🔔" });
-      } else if (Notification.permission === "denied") {
+        new Notification("🍽️ Test-Benachrichtigung", { body:"Die Benachrichtigungen funktionieren!" });
+      } else if (Notification.permission === "denied"){
         alert("Benachrichtigungen wurden blockiert. Bitte aktiviere sie in den Browser-Einstellungen.");
       } else {
         requestNotificationPermission();
       }
     }
 
-    function toggleSound() {
+    function toggleSound(){
       soundEnabled = document.getElementById("soundToggle").checked;
       localStorage.setItem("soundEnabled", String(soundEnabled));
 
       const label = document.querySelector('label[for="soundToggle"]');
-      if (soundEnabled) {
+      if (soundEnabled){
         label.textContent = "🔊 Signalton aktiviert";
         playSound();
       } else {
@@ -713,27 +734,28 @@
       }
     }
 
-    function scrollToNext() {
+    function scrollToNext(){
       const { nextIndex } = findCurrentAndNext();
-      if (nextIndex !== -1) {
-        document.getElementById(`item-${nextIndex}`).scrollIntoView({ behavior:"smooth", block:"center" });
+      if (nextIndex !== -1){
+        const el = document.getElementById(`item-${nextIndex}`);
+        if (el) el.scrollIntoView({ behavior:"smooth", block:"center" });
       }
     }
 
-    function toggleTheme() {
+    function toggleTheme(){
       document.body.classList.toggle("medical");
       const isMedical = document.body.classList.contains("medical");
       localStorage.setItem("theme", isMedical ? "medical" : "default");
     }
 
-    function loadTheme() {
+    function loadTheme(){
       const savedTheme = localStorage.getItem("theme");
       if (savedTheme === "medical") document.body.classList.add("medical");
     }
 
-    function loadSoundPreference() {
+    function loadSoundPreference(){
       const savedSound = localStorage.getItem("soundEnabled");
-      if (savedSound !== null) {
+      if (savedSound !== null){
         soundEnabled = savedSound === "true";
         document.getElementById("soundToggle").checked = soundEnabled;
         const label = document.querySelector('label[for="soundToggle"]');
@@ -741,7 +763,106 @@
       }
     }
 
-    function init() {
+    // =========================
+    // Plan-Laden (Auto/Tag-Schalter/URL)
+    // =========================
+    function getDayKeyAuto(){
+      // JS getDay(): 0=So 1=Mo ... 6=Sa
+      const dayMap = ["sun","mon","tue","wed","thu","fri","sat"];
+      return dayMap[new Date().getDay()];
+    }
+
+    function getDayOverride(){
+      // Priorität: URL ?day=xxx  -> localStorage override -> auto
+      const params = new URLSearchParams(window.location.search);
+      const urlDay = (params.get("day") || "").toLowerCase();
+
+      const allowed = new Set(["auto","mon","tue","wed","thu","fri","sat","sun"]);
+      if (allowed.has(urlDay) && urlDay) return urlDay;
+
+      const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
+      if (allowed.has(saved)) return saved;
+
+      return "auto";
+    }
+
+    function getPlanFileForKey(key){
+      const dayKey = (key === "auto") ? getDayKeyAuto() : key;
+      return `plans/${dayKey}.js`;
+    }
+
+    function setDayOverride(key){
+      localStorage.setItem(DAY_OVERRIDE_KEY, key);
+      highlightDayButtons(key);
+      loadPlanAndStart(key, true);
+    }
+
+    function highlightDayButtons(key){
+      const bar = document.getElementById("daybar");
+      if (!bar) return;
+      [...bar.querySelectorAll("button[data-day]")].forEach(btn=>{
+        btn.classList.toggle("active", btn.getAttribute("data-day") === key);
+      });
+    }
+
+    function loadScheduleScript(src){
+      return new Promise((resolve,reject)=>{
+        const s = document.createElement("script");
+        s.src = src + "?v=" + Date.now(); // Cache-Buster, damit GitHub Pages Updates schneller ziehen
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error("Konnte Plan-Datei nicht laden: " + src));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function loadPlanAndStart(key, rerenderOnly){
+      try{
+        const statusDiv = document.getElementById("status");
+        statusDiv.textContent = "Plan wird geladen...";
+
+        // Plan-Datei lädt: setzt window.schedule = [...]
+        window.schedule = undefined;
+        const src = getPlanFileForKey(key);
+        await loadScheduleScript(src);
+
+        if (Array.isArray(window.schedule) && window.schedule.length){
+          schedule = window.schedule;
+        } else {
+          throw new Error("Plan-Datei geladen, aber window.schedule fehlt oder ist leer.");
+        }
+
+        lastNotifiedIndex = -1;
+
+        if (rerenderOnly){
+          updateTime();
+          updateTimeline();
+          updateNextItem();
+          statusDiv.textContent = "Plan aktiv";
+          return;
+        }
+
+        initAfterPlanLoaded();
+      }catch(e){
+        console.error(e);
+        document.getElementById("status").textContent = "Plan-Datei fehlt/Fehler";
+        const nextItemDiv = document.getElementById("nextItem");
+        if (nextItemDiv){
+          nextItemDiv.innerHTML = `
+            <div class="next-item">
+              <h2>⚠️ Plan konnte nicht geladen werden</h2>
+              <div class="description">${e.message}</div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    // =========================
+    // Init
+    // =========================
+    let mainInterval = null;
+
+    function initAfterPlanLoaded(){
       loadTheme();
       loadSoundPreference();
       loadOffset();
@@ -750,95 +871,27 @@
       updateTimeline();
       updateNextItem();
 
-      if (Notification.permission === "default") {
+      if (Notification.permission === "default"){
         document.getElementById("notificationAlert").classList.add("show");
       }
 
-      // WICHTIG: Timeline nur updaten, wenn NICHT gescrollt wird
-      setInterval(() => {
+      if (mainInterval) clearInterval(mainInterval);
+      mainInterval = setInterval(()=>{
         updateTime();
         updateNextItem();
         checkForNotifications();
         if (!isScrolling) updateTimeline();
       }, 10000);
-    }
-	const DAY_OVERRIDE_KEY = "dayOverride"; // "mon"..."sun" oder "" für auto
 
-function setDay(key) {
-  // key: "mon".."sun" oder "auto"
-  if (key === "auto") {
-    localStorage.removeItem(DAY_OVERRIDE_KEY);
-  } else {
-    localStorage.setItem(DAY_OVERRIDE_KEY, key);
-  }
-  // Seite neu laden, damit der passende Plan geladen wird
-  location.reload();
-}
-
-function getPlanFileForToday() {
-  const dayMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-  const todayKey = dayMap[new Date().getDay()];
-
-  // 1) URL-Override ?day=mon (höchste Priorität)
-  const params = new URLSearchParams(window.location.search);
-  const urlOverride = (params.get("day") || "").toLowerCase();
-
-  // 2) Schalter-Override aus localStorage (mittlere Priorität)
-  const savedOverride = (localStorage.getItem("dayOverride") || "").toLowerCase();
-
-  const allowed = new Set(dayMap);
-  const key =
-    allowed.has(urlOverride) ? urlOverride :
-    allowed.has(savedOverride) ? savedOverride :
-    todayKey;
-
-  return `plans/${key}.js`;
-}
-
-
-function loadScheduleScript(src) {
-  return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Konnte Plan-Datei nicht laden: " + src));
-    document.head.appendChild(s);
-  });
-}
-
-(async function start() {
-  try {
-    const file = getPlanFileForToday();
-    await loadScheduleScript(file);
-
-    // Erwartung: die Plan-Datei setzt "const schedule = [...]"
-    // -> wir übernehmen sie in unsere globale Variable
-    if (typeof window.schedule !== "undefined") {
-      schedule = window.schedule;
-    } else if (typeof schedule !== "undefined" && Array.isArray(schedule) && schedule.length) {
-      // falls Browser es direkt im gleichen Scope hat: ok
-    } else {
-      // Häufigster Fall: const schedule ist NICHT global sichtbar.
-      // Deshalb: in Plan-Dateien bitte "window.schedule = [...]" nutzen (siehe Hinweis unten).
-      console.warn("schedule nicht gefunden. Bitte Plan-Datei anpassen auf: window.schedule = [...]");
+      document.getElementById("status").textContent = "Plan aktiv";
     }
 
-    init();
-  } catch (e) {
-    console.error(e);
-    document.getElementById("status").textContent = "Plan-Datei fehlt/Fehler";
-    const nextItemDiv = document.getElementById("nextItem");
-    if (nextItemDiv) {
-      nextItemDiv.innerHTML = `
-        <div class="next-item">
-          <h2>⚠️ Plan konnte nicht geladen werden</h2>
-          <div class="description">${e.message}</div>
-        </div>
-      `;
-    }
-  }
-})();
-
+    // Start: Tag bestimmen + Plan laden
+    (async function start(){
+      const key = getDayOverride(); // auto|mon|...
+      highlightDayButtons(key);
+      await loadPlanAndStart(key, false);
+    })();
   </script>
 </body>
 </html>
