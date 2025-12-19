@@ -1,649 +1,597 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tagesplan Erinnerungen - 1500 kcal</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            transition: background 0.5s ease;
-        }
-        
-        body.medical {
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            transition: background 0.5s ease;
-        }
-        
-        body.medical .header {
-            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
-        }
-        
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-        
-        .current-time {
-            font-size: 48px;
-            font-weight: bold;
-            margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        .status {
-            font-size: 18px;
-            padding: 10px 20px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
-            display: inline-block;
-        }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .next-item {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(240, 147, 251, 0.3);
-            transition: background 0.5s ease, box-shadow 0.5s ease;
-        }
-        
-        body.medical .next-item {
-            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
-            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
-        }
-        
-        .next-item h2 {
-            font-size: 20px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .next-item h2::before {
-            content: "⏰";
-            font-size: 24px;
-        }
-        
-        .next-item .time {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .next-item .description {
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        
-        .timeline {
-            position: relative;
-            padding-left: 40px;
-        }
-        
-        .timeline::before {
-            content: "";
-            position: absolute;
-            left: 15px;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-            transition: background 0.5s ease;
-        }
-        
-        body.medical .timeline::before {
-            background: linear-gradient(180deg, #66bb6a 0%, #388e3c 100%);
-        }
-        
-        .timeline-item {
-            position: relative;
-            padding: 15px;
-            margin-bottom: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .timeline-item::before {
-            content: "";
-            position: absolute;
-            left: -33px;
-            top: 20px;
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background: white;
-            border: 3px solid #667eea;
-            transition: border-color 0.5s ease;
-        }
-        
-        body.medical .timeline-item::before {
-            border-color: #4caf50;
-        }
-        
-        .timeline-item.completed {
-            opacity: 0.5;
-            background: #e9ecef;
-        }
-        
-        .timeline-item.completed::before {
-            background: #28a745;
-            border-color: #28a745;
-        }
-        
-        .timeline-item.current {
-            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-            transform: scale(1.02);
-            box-shadow: 0 5px 15px rgba(253, 203, 110, 0.4);
-            transition: all 0.3s ease;
-        }
-        
-        body.medical .timeline-item.current {
-            background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
-            box-shadow: 0 5px 15px rgba(165, 214, 167, 0.4);
-        }
-        
-        .timeline-item.current::before {
-            background: #fdcb6e;
-            border-color: #fdcb6e;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.3); }
-        }
-        
-        .timeline-item .time {
-            font-weight: bold;
-            color: #667eea;
-            font-size: 18px;
-            margin-bottom: 5px;
-            transition: color 0.5s ease;
-        }
-        
-        body.medical .timeline-item .time {
-            color: #2e7d32;
-        }
-        
-        .timeline-item.current .time {
-            color: #d63031;
-        }
-        
-        body.medical .timeline-item.current .time {
-            color: #1b5e20;
-        }
-        
-        .timeline-item .description {
-            color: #2d3436;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .timeline-item .calories {
-            color: #0984e3;
-            font-weight: bold;
-            margin-top: 5px;
-            font-size: 13px;
-        }
-        
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        body.medical .btn-primary {
-            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        body.medical .btn-primary:hover {
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
-        }
-        
-        .btn-secondary {
-            background: #ecf0f1;
-            color: #2d3436;
-        }
-        
-        .btn-secondary:hover {
-            background: #dfe6e9;
-        }
-        
-        .notification-permission {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .notification-permission.show {
-            display: block;
-        }
-        
-        .sound-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 15px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
-            margin-top: 10px;
-        }
-        
-        .sound-toggle input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tagesplan Erinnerungen - 1500 kcal</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body{
+      font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      min-height:100vh;
+      padding:20px;
+      transition:background .5s ease;
+    }
+    body.medical{ background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%); }
+
+    .container{
+      max-width:800px; margin:0 auto; background:#fff;
+      border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,.3);
+      overflow:hidden;
+    }
+
+    .header{
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      color:#fff; padding:30px; text-align:center;
+      transition:background .5s ease;
+    }
+    body.medical .header{ background:linear-gradient(135deg,#2e7d32 0%,#1b5e20 100%); }
+
+    .header h1{ font-size:28px; margin-bottom:10px; }
+
+    .current-time{
+      font-size:48px; font-weight:bold; margin:20px 0;
+      text-shadow:2px 2px 4px rgba(0,0,0,.2);
+    }
+
+    .status{
+      font-size:18px; padding:10px 20px;
+      background:rgba(255,255,255,.2);
+      border-radius:10px; display:inline-block;
+    }
+
+    .sound-toggle{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:10px 15px; background:rgba(255,255,255,.2);
+      border-radius:10px; margin-top:10px; flex-wrap:wrap;
+      justify-content:center;
+    }
+    .sound-toggle input{ width:20px; height:20px; cursor:pointer; }
+
+    .content{ padding:30px; }
+
+    .next-item{
+      background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);
+      color:#fff; padding:25px; border-radius:15px; margin-bottom:30px;
+      box-shadow:0 10px 30px rgba(240,147,251,.3);
+      transition:background .5s ease, box-shadow .5s ease;
+    }
+    body.medical .next-item{
+      background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);
+      box-shadow:0 10px 30px rgba(76,175,80,.3);
+    }
+
+    .next-item h2{ font-size:20px; margin-bottom:15px; display:flex; align-items:center; gap:10px; }
+    .next-item h2::before{ content:"⏰"; font-size:24px; }
+
+    .next-item .time{ font-size:32px; font-weight:bold; margin-bottom:10px; }
+    .next-item .description{ font-size:16px; line-height:1.6; }
+
+    .timeline{ position:relative; padding-left:40px; }
+    .timeline::before{
+      content:""; position:absolute; left:15px; top:0; bottom:0; width:3px;
+      background:linear-gradient(180deg,#667eea 0%,#764ba2 100%);
+      transition:background .5s ease;
+    }
+    body.medical .timeline::before{ background:linear-gradient(180deg,#66bb6a 0%,#388e3c 100%); }
+
+    .timeline-item{
+      position:relative; padding:15px; margin-bottom:15px;
+      background:#f8f9fa; border-radius:10px; transition:all .3s ease;
+    }
+    .timeline-item::before{
+      content:""; position:absolute; left:-33px; top:20px; width:15px; height:15px;
+      border-radius:50%; background:#fff; border:3px solid #667eea;
+      transition:border-color .5s ease;
+    }
+    body.medical .timeline-item::before{ border-color:#4caf50; }
+
+    .timeline-item.completed{ opacity:.5; background:#e9ecef; }
+    .timeline-item.completed::before{ background:#28a745; border-color:#28a745; }
+
+    .timeline-item.current{
+      background:linear-gradient(135deg,#ffeaa7 0%,#fdcb6e 100%);
+      transform:scale(1.02);
+      box-shadow:0 5px 15px rgba(253,203,110,.4);
+    }
+    body.medical .timeline-item.current{
+      background:linear-gradient(135deg,#c8e6c9 0%,#a5d6a7 100%);
+      box-shadow:0 5px 15px rgba(165,214,167,.4);
+    }
+    .timeline-item.current::before{
+      background:#fdcb6e; border-color:#fdcb6e; animation:pulse 2s infinite;
+    }
+    @keyframes pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+
+    .timeline-item .time{ font-weight:bold; color:#667eea; font-size:18px; margin-bottom:5px; transition:color .5s ease; }
+    body.medical .timeline-item .time{ color:#2e7d32; }
+    .timeline-item.current .time{ color:#d63031; }
+    body.medical .timeline-item.current .time{ color:#1b5e20; }
+
+    .timeline-item .description{ color:#2d3436; font-size:14px; line-height:1.5; }
+    .timeline-item .calories{ color:#0984e3; font-weight:bold; margin-top:5px; font-size:13px; }
+
+    .controls{ display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+
+    .btn{
+      padding:12px 24px; border:none; border-radius:10px;
+      font-size:16px; cursor:pointer; transition:all .3s ease; font-weight:600;
+    }
+
+    .btn-primary{ background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#fff; }
+    body.medical .btn-primary{ background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%); }
+
+    .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 5px 15px rgba(102,126,234,.4); }
+    body.medical .btn-primary:hover{ box-shadow:0 5px 15px rgba(76,175,80,.4); }
+
+    .btn-secondary{ background:#ecf0f1; color:#2d3436; }
+    .btn-secondary:hover{ background:#dfe6e9; }
+
+    .notification-permission{
+      background:#fff3cd; border:2px solid #ffc107;
+      padding:15px; border-radius:10px; margin-bottom:20px; display:none;
+    }
+    .notification-permission.show{ display:block; }
+
+    /* NEU: Offset-Panel */
+    .offset-panel{
+      background:#f1f3f5;
+      border:2px dashed rgba(0,0,0,.15);
+      padding:15px;
+      border-radius:12px;
+      margin-bottom:20px;
+    }
+    .offset-panel h3{ margin-bottom:10px; color:#2d3436; font-size:16px; }
+    .offset-row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .offset-row label{ font-weight:600; color:#2d3436; }
+    .offset-row input[type="time"]{
+      padding:10px 12px; border-radius:10px; border:1px solid #ced4da;
+      font-size:16px;
+    }
+    .hint{ margin-top:10px; font-size:13px; color:#495057; line-height:1.4; }
+    .hint code{ background:rgba(0,0,0,.05); padding:2px 6px; border-radius:6px; }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🍽️ Dein Tagesplan</h1>
-            <div class="current-time" id="currentTime">00:00:00</div>
-            <div class="status" id="status">Lädt...</div>
-            <div class="sound-toggle">
-                <input type="checkbox" id="soundToggle" checked onchange="toggleSound()">
-                <label for="soundToggle" style="cursor: pointer;">🔊 Signalton aktiviert</label>
-            </div>
-        </div>
-        
-        <div class="content">
-            <div class="notification-permission" id="notificationAlert">
-                <strong>⚠️ Benachrichtigungen aktivieren?</strong><br>
-                Damit du rechtzeitig erinnert wirst, erlaube bitte die Browser-Benachrichtigungen.
-                <button class="btn btn-primary" onclick="requestNotificationPermission()" style="margin-top: 10px;">
-                    Benachrichtigungen aktivieren
-                </button>
-            </div>
-            
-            <div class="controls">
-                <button class="btn btn-primary" onclick="toggleTheme()">🎨 Design wechseln</button>
-                <button class="btn btn-primary" onclick="testNotification()">🔔 Test-Benachrichtigung</button>
-                <button class="btn btn-secondary" onclick="scrollToNext()">⬇️ Zum nächsten Punkt</button>
-            </div>
-            
-            <div id="nextItem"></div>
-            
-            <h3 style="margin-bottom: 20px; color: #2d3436;">📋 Tagesübersicht</h3>
-            <div class="timeline" id="timeline"></div>
-        </div>
+  <div class="container">
+    <div class="header">
+      <h1>🍽️ Dein Tagesplan</h1>
+      <div class="current-time" id="currentTime">00:00:00</div>
+      <div class="status" id="status">Lädt...</div>
+      <div class="sound-toggle">
+        <input type="checkbox" id="soundToggle" checked onchange="toggleSound()" />
+        <label for="soundToggle" style="cursor:pointer;">🔊 Signalton aktiviert</label>
+      </div>
     </div>
 
-    <script>
-        const schedule = [
-            { time: "06:15", title: "Prednisolon", description: "", calories: 0 },
-            { time: "06:30", title: "Vitamin-B-Komplex", description: "", calories: 0 },
-            { time: "06:40", title: "Magnesium-Malat", description: "", calories: 0 },
-            { time: "06:45", title: "L-Glutamin", description: "5 g", calories: 0 },
-            { time: "07:00", title: "Medikamente", description: "Eliquis/Apixaban 5 mg + Vitamin D3/K2 + Omega-3 + Q10 + Finerenon 10 mg", calories: 0 },
-            { time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
-            { time: "08:00", title: "Frühstück (leicht)", description: "40 g Hafer, 150 g Magerquark, 1 TL Flohsamen, 1 TL Haferkleie, 1 EL Leinöl, 80-100 g Beeren", calories: 340 },
-            { time: "09:00", title: "Herz/Niere", description: "Bisoprolol, Amlodipin, Ezetimib", calories: 0 },
-            { time: "09:30", title: "Eiweißblock (klein)", description: "250 g Magerquark, 1 Ei", calories: 250 },
-            { time: "12:30", title: "Mittagessen", description: "300-350 g Gemüse, 1 EL Leinöl, 2 Eier", calories: 370 },
-            { time: "13:00", title: "Artischocke", description: "", calories: 0 },
-            { time: "15:30", title: "Haferportion", description: "30 g Hafer, Optional: Flohsamen", calories: 117 },
-            { time: "17:30", title: "L-Glutamin zweite Portion", description: "3-5 g", calories: 0 },
-            { time: "18:00", title: "Abendmedikamente", description: "Eliquis/Apixaban 5 mg + Artischocke 2 + Rosuvastatin + Ramipril", calories: 0 },
-            { time: "18:00", title: "Abendessen", description: "Wähle eine Option: A) Hüttenkäse + Gemüse, B) Eier + Salat, C) Magerquark + Gemüse, D) Hähnchen/Fisch + Gemüse, E) Gemüsesuppe + Quark", calories: 290 },
-            { time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
-            { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
-        ];
+    <div class="content">
+      <div class="notification-permission" id="notificationAlert">
+        <strong>⚠️ Benachrichtigungen aktivieren?</strong><br />
+        Damit du rechtzeitig erinnert wirst, erlaube bitte die Browser-Benachrichtigungen.
+        <button class="btn btn-primary" onclick="requestNotificationPermission()" style="margin-top:10px;">
+          Benachrichtigungen aktivieren
+        </button>
+      </div>
 
-        let lastNotifiedIndex = -1;
-        let soundEnabled = true;
-        let audioContext = null;
+      <!-- NEU: "Verschlafen"-Offset -->
+      <div class="offset-panel">
+        <h3>⏱️ Verschlafen-Modus (Zeitversatz)</h3>
+        <div class="offset-row">
+          <label for="anchorTime">Ich bin aufgestanden um</label>
+          <input type="time" id="anchorTime" />
+          <button class="btn btn-primary" onclick="applyOffsetFromAnchor()">Offset setzen</button>
+          <button class="btn btn-secondary" onclick="resetOffset()">Offset zurücksetzen</button>
+        </div>
+        <div class="hint">
+          Logik: <code>06:15</code> ist dein Plan-Start. Wenn du z.B. um <code>07:15</code> startest,
+          verschiebt sich alles um <code>+60</code> Minuten. Läuft über Mitternacht korrekt mit.
+          Speichert automatisch im Browser (localStorage).
+        </div>
+      </div>
 
-        function initAudioContext() {
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                console.log('AudioContext initialisiert');
-            }
+      <div class="controls">
+        <button class="btn btn-primary" onclick="toggleTheme()">🎨 Design wechseln</button>
+        <button class="btn btn-primary" onclick="testNotification()">🔔 Test-Benachrichtigung</button>
+        <button class="btn btn-secondary" onclick="scrollToNext()">⬇️ Zum nächsten Punkt</button>
+      </div>
+
+      <div id="nextItem"></div>
+
+      <h3 style="margin-bottom:20px;color:#2d3436;">📋 Tagesübersicht</h3>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+
+  <script>
+    // Originalplan (unverändert)
+    const schedule = [
+      { time: "06:15", title: "Prednisolon", description: "", calories: 0 },
+      { time: "06:30", title: "Vitamin-B-Komplex", description: "", calories: 0 },
+      { time: "06:40", title: "Magnesium-Malat", description: "", calories: 0 },
+      { time: "06:45", title: "L-Glutamin", description: "5 g", calories: 0 },
+      { time: "07:00", title: "Medikamente", description: "Eliquis/Apixaban 5 mg + Vitamin D3/K2 + Omega-3 + Q10 + Finerenon 10 mg", calories: 0 },
+      { time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
+      { time: "08:00", title: "Frühstück (leicht)", description: "40 g Hafer, 150 g Magerquark, 1 TL Flohsamen, 1 TL Haferkleie, 1 EL Leinöl, 80-100 g Beeren", calories: 340 },
+      { time: "09:00", title: "Herz/Niere", description: "Bisoprolol, Amlodipin, Ezetimib", calories: 0 },
+      { time: "09:30", title: "Eiweißblock (klein)", description: "250 g Magerquark, 1 Ei", calories: 250 },
+      { time: "12:30", title: "Mittagessen", description: "300-350 g Gemüse, 1 EL Leinöl, 2 Eier", calories: 370 },
+      { time: "13:00", title: "Artischocke", description: "", calories: 0 },
+      { time: "15:30", title: "Haferportion", description: "30 g Hafer, Optional: Flohsamen", calories: 117 },
+      { time: "17:30", title: "L-Glutamin zweite Portion", description: "3-5 g", calories: 0 },
+      { time: "18:00", title: "Abendmedikamente", description: "Eliquis/Apixaban 5 mg + Artischocke 2 + Rosuvastatin + Ramipril", calories: 0 },
+      { time: "18:00", title: "Abendessen", description: "Wähle eine Option: A) Hüttenkäse + Gemüse, B) Eier + Salat, C) Magerquark + Gemüse, D) Hähnchen/Fisch + Gemüse, E) Gemüsesuppe + Quark", calories: 290 },
+      { time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
+      { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
+    ];
+
+    // ===== NEU: Zeitversatz-Logik =====
+    const PLAN_START = "06:15";           // Anker im Originalplan
+    const OFFSET_KEY = "scheduleOffsetMin";
+    const ANCHOR_KEY = "scheduleAnchorTime";
+
+    let offsetMinutes = 0;               // wird aus localStorage geladen
+    let lastNotifiedIndex = -1;
+    let soundEnabled = true;
+
+    function getTimeInMinutes(timeStr) {
+      const [h, m] = timeStr.split(":").map(Number);
+      return h * 60 + m;
+    }
+
+    function minutesToHHMM(totalMinutes) {
+      // robust gegen negative und > 24h
+      const mod = ((totalMinutes % 1440) + 1440) % 1440;
+      const h = String(Math.floor(mod / 60)).padStart(2, "0");
+      const m = String(mod % 60).padStart(2, "0");
+      return `${h}:${m}`;
+    }
+
+    function getCurrentMinutes() {
+      const now = new Date();
+      return now.getHours() * 60 + now.getMinutes();
+    }
+
+    function getEffectiveItemMinutes(item) {
+      // Originalzeit + offset, moduliert auf 24h
+      return ((getTimeInMinutes(item.time) + offsetMinutes) % 1440 + 1440) % 1440;
+    }
+
+    function getEffectiveItemTimeStr(item) {
+      return minutesToHHMM(getTimeInMinutes(item.time) + offsetMinutes);
+    }
+
+    function saveOffset(mins, anchorTimeStr) {
+      offsetMinutes = mins;
+      localStorage.setItem(OFFSET_KEY, String(mins));
+      if (anchorTimeStr) localStorage.setItem(ANCHOR_KEY, anchorTimeStr);
+    }
+
+    function loadOffset() {
+      const saved = localStorage.getItem(OFFSET_KEY);
+      offsetMinutes = saved !== null ? parseInt(saved, 10) || 0 : 0;
+
+      const anchor = localStorage.getItem(ANCHOR_KEY);
+      const anchorInput = document.getElementById("anchorTime");
+      if (anchor && anchorInput) anchorInput.value = anchor;
+    }
+
+    function applyOffsetFromAnchor() {
+      const anchorInput = document.getElementById("anchorTime");
+      if (!anchorInput || !anchorInput.value) return;
+
+      const actualStart = getTimeInMinutes(anchorInput.value);  // z.B. 07:15
+      const planStart = getTimeInMinutes(PLAN_START);          // 06:15
+
+      // einfacher Versatz in Minuten
+      const mins = actualStart - planStart;
+      saveOffset(mins, anchorInput.value);
+
+      // damit du sofort wieder Erinnerungen bekommst, falls du den Offset stark änderst:
+      lastNotifiedIndex = -1;
+
+      updateTimeline();
+      updateNextItem();
+    }
+
+    function resetOffset() {
+      saveOffset(0, "");
+      localStorage.removeItem(ANCHOR_KEY);
+      const anchorInput = document.getElementById("anchorTime");
+      if (anchorInput) anchorInput.value = "";
+      lastNotifiedIndex = -1;
+
+      updateTimeline();
+      updateNextItem();
+    }
+
+    // ===== Bestehende Anzeige-Logik, angepasst auf effektive Zeiten =====
+
+    function updateTime() {
+      const now = new Date();
+      document.getElementById("currentTime").textContent = now.toLocaleTimeString("de-DE");
+    }
+
+    function findCurrentAndNext() {
+      // Wir bestimmen "heute" anhand aktueller Minuten im Tag.
+      // Da der Plan durch Offset ggf. über Mitternacht läuft, sortieren wir die Einträge
+      // nach effektiver Zeit und suchen darin.
+      const currentMinutes = getCurrentMinutes();
+
+      const indexed = schedule.map((item, index) => ({
+        item, index,
+        eff: getEffectiveItemMinutes(item)
+      }));
+
+      // sortiert nach effektiver Uhrzeit
+      indexed.sort((a, b) => a.eff - b.eff);
+
+      // finde nächstes (>= jetzt). current ist davor.
+      let next = indexed.find(x => x.eff > currentMinutes);
+      let nextIndex = next ? next.index : -1;
+
+      // currentIndex = letztes Element <= jetzt (in sortierter Liste)
+      let currentSortedPos = -1;
+      for (let i = 0; i < indexed.length; i++) {
+        if (indexed[i].eff <= currentMinutes) currentSortedPos = i;
+      }
+      let currentIndex = currentSortedPos >= 0 ? indexed[currentSortedPos].index : -1;
+
+      // Wenn nichts mehr kommt (nextIndex=-1): Tagesplan abgeschlossen
+      // (Du kannst das optional auch als "morgen früh" interpretieren, hier bleibt es wie gehabt.)
+      return { currentIndex, nextIndex, sorted: indexed };
+    }
+
+    function updateTimeline() {
+      const timeline = document.getElementById("timeline");
+      const { currentIndex, sorted } = findCurrentAndNext();
+
+      timeline.innerHTML = "";
+
+      // Timeline in effektiver Zeitreihenfolge anzeigen (das ist im Verschlafen-Modus am logischsten)
+      sorted.forEach(({ item, index }) => {
+        const div = document.createElement("div");
+        div.className = "timeline-item";
+        div.id = `item-${index}`;
+
+        // Completed/Current: Vergleich anhand "Position" in sortierter Liste
+        // Dazu ermitteln wir erneut die Positionen in sorted:
+        const currentPos = sorted.findIndex(x => x.index === currentIndex);
+        const thisPos = sorted.findIndex(x => x.index === index);
+
+        if (currentIndex !== -1 && thisPos < currentPos) div.classList.add("completed");
+        if (index === currentIndex) div.classList.add("current");
+
+        const effTime = getEffectiveItemTimeStr(item);
+
+        div.innerHTML = `
+          <div class="time">${effTime} Uhr</div>
+          <div class="description">
+            <strong>${item.title}</strong>
+            ${item.description ? `<br>${item.description}` : ""}
+          </div>
+          ${item.calories > 0 ? `<div class="calories">📊 ${item.calories} kcal</div>` : ""}
+        `;
+
+        timeline.appendChild(div);
+      });
+    }
+
+    function updateNextItem() {
+      const { nextIndex } = findCurrentAndNext();
+      const nextItemDiv = document.getElementById("nextItem");
+      const statusDiv = document.getElementById("status");
+
+      if (nextIndex === -1) {
+        nextItemDiv.innerHTML = `
+          <div class="next-item">
+            <h2>✅ Tagesplan abgeschlossen!</h2>
+            <div class="description">Alle Punkte für heute erledigt. Gute Nacht! 🌙</div>
+          </div>
+        `;
+        statusDiv.textContent = "Tagesplan abgeschlossen";
+        return;
+      }
+
+      const nextItem = schedule[nextIndex];
+      const currentMinutes = getCurrentMinutes();
+      const nextMinutes = getEffectiveItemMinutes(nextItem);
+
+      // Minuten bis zum nächsten Punkt (innerhalb des Tages; wenn "nextMinutes" schon vorbei wäre,
+      // wäre es nicht "next", daher ist es hier >= 0)
+      let minutesUntil = nextMinutes - currentMinutes;
+      if (minutesUntil < 0) minutesUntil += 1440;
+
+      const effTime = getEffectiveItemTimeStr(nextItem);
+
+      nextItemDiv.innerHTML = `
+        <div class="next-item">
+          <h2>Als Nächstes:</h2>
+          <div class="time">${effTime} Uhr</div>
+          <div class="description">
+            <strong>${nextItem.title}</strong><br>
+            ${nextItem.description ? `${nextItem.description}<br>` : ""}
+            ${nextItem.calories > 0 ? `<br>📊 ${nextItem.calories} kcal` : ""}
+          </div>
+        </div>
+      `;
+
+      if (minutesUntil <= 0) {
+        statusDiv.textContent = "⏰ JETZT!";
+      } else if (minutesUntil < 60) {
+        statusDiv.textContent = `⏰ In ${minutesUntil} Minuten`;
+      } else {
+        const hours = Math.floor(minutesUntil / 60);
+        const mins = minutesUntil % 60;
+        statusDiv.textContent = `⏰ In ${hours}h ${mins}min`;
+      }
+    }
+
+    function checkForNotifications() {
+      if (Notification.permission !== "granted") return;
+
+      const { nextIndex } = findCurrentAndNext();
+      if (nextIndex === -1 || nextIndex === lastNotifiedIndex) return;
+
+      const nextItem = schedule[nextIndex];
+      const currentMinutes = getCurrentMinutes();
+      const nextMinutes = getEffectiveItemMinutes(nextItem);
+
+      let minutesUntil = nextMinutes - currentMinutes;
+      if (minutesUntil < -720) minutesUntil += 1440;   // Schutz, falls irgendwas "über Mitternacht" kippt
+      if (minutesUntil < 0) minutesUntil += 1440;
+
+      // Benachrichtigung wenn Zeit erreicht ist (innerhalb von 2 Minuten Toleranz)
+      if (minutesUntil <= 0 || minutesUntil <= 2) {
+        sendNotification(nextItem);
+        lastNotifiedIndex = nextIndex;
+      }
+    }
+
+    // ===== Sound/Notification/Theme unverändert =====
+
+    function playSound() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === "suspended") audioContext.resume();
+
+        const oscillator1 = audioContext.createOscillator();
+        const gainNode1 = audioContext.createGain();
+        oscillator1.connect(gainNode1);
+        gainNode1.connect(audioContext.destination);
+        oscillator1.frequency.value = 800;
+        oscillator1.type = "sine";
+        gainNode1.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator1.start(audioContext.currentTime);
+        oscillator1.stop(audioContext.currentTime + 0.3);
+
+        setTimeout(() => {
+          const oscillator2 = audioContext.createOscillator();
+          const gainNode2 = audioContext.createGain();
+          oscillator2.connect(gainNode2);
+          gainNode2.connect(audioContext.destination);
+          oscillator2.frequency.value = 600;
+          oscillator2.type = "sine";
+          gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+          oscillator2.start(audioContext.currentTime);
+          oscillator2.stop(audioContext.currentTime + 0.4);
+        }, 200);
+      } catch (e) {
+        console.error("Sound-Fehler:", e);
+      }
+    }
+
+    function sendNotification(item) {
+      if (soundEnabled) playSound();
+
+      const effTime = getEffectiveItemTimeStr(item);
+
+      const notification = new Notification("🍽️ Tagesplan Erinnerung", {
+        body: `${effTime} Uhr: ${item.title}${item.description ? "\n" + item.description : ""}`,
+        icon: "🔔",
+        tag: "meal-reminder",
+        requireInteraction: true
+      });
+
+      notification.onclick = function () {
+        window.focus();
+        notification.close();
+      };
+    }
+
+    function requestNotificationPermission() {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          document.getElementById("notificationAlert").classList.remove("show");
+          alert("✅ Benachrichtigungen aktiviert!");
         }
+      });
+    }
 
-        function updateTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('de-DE');
-            document.getElementById('currentTime').textContent = timeString;
-        }
+    function testNotification() {
+      if (Notification.permission === "granted") {
+        if (soundEnabled) playSound();
+        new Notification("🍽️ Test-Benachrichtigung", {
+          body: "Die Benachrichtigungen funktionieren! Du wirst zur richtigen Zeit erinnert.",
+          icon: "🔔"
+        });
+      } else if (Notification.permission === "denied") {
+        alert("Benachrichtigungen wurden blockiert. Bitte aktiviere sie in den Browser-Einstellungen.");
+      } else {
+        requestNotificationPermission();
+      }
+    }
 
-        function getTimeInMinutes(timeStr) {
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            return hours * 60 + minutes;
-        }
+    function toggleSound() {
+      soundEnabled = document.getElementById("soundToggle").checked;
+      localStorage.setItem("soundEnabled", String(soundEnabled));
 
-        function getCurrentMinutes() {
-            const now = new Date();
-            return now.getHours() * 60 + now.getMinutes();
-        }
+      const label = document.querySelector('label[for="soundToggle"]');
+      if (soundEnabled) {
+        label.textContent = "🔊 Signalton aktiviert";
+        playSound();
+      } else {
+        label.textContent = "🔇 Signalton deaktiviert";
+      }
+    }
 
-        function findCurrentAndNext() {
-            const currentMinutes = getCurrentMinutes();
-            let currentIndex = -1;
-            let nextIndex = -1;
+    function scrollToNext() {
+      const { nextIndex } = findCurrentAndNext();
+      if (nextIndex !== -1) {
+        document.getElementById(`item-${nextIndex}`).scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }
+    }
 
-            for (let i = 0; i < schedule.length; i++) {
-                const itemMinutes = getTimeInMinutes(schedule[i].time);
-                
-                if (itemMinutes <= currentMinutes) {
-                    currentIndex = i;
-                } else {
-                    nextIndex = i;
-                    break;
-                }
-            }
+    function toggleTheme() {
+      document.body.classList.toggle("medical");
+      const isMedical = document.body.classList.contains("medical");
+      localStorage.setItem("theme", isMedical ? "medical" : "default");
+    }
 
-            return { currentIndex, nextIndex };
-        }
+    function loadTheme() {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "medical") document.body.classList.add("medical");
+    }
 
-        function updateTimeline() {
-            const timeline = document.getElementById('timeline');
-            const { currentIndex, nextIndex } = findCurrentAndNext();
-            
-            timeline.innerHTML = '';
-            
-            schedule.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'timeline-item';
-                div.id = `item-${index}`;
-                
-                if (index < currentIndex) {
-                    div.classList.add('completed');
-                } else if (index === currentIndex) {
-                    div.classList.add('current');
-                }
-                
-                div.innerHTML = `
-                    <div class="time">${item.time} Uhr</div>
-                    <div class="description">
-                        <strong>${item.title}</strong>
-                        ${item.description ? `<br>${item.description}` : ''}
-                    </div>
-                    ${item.calories > 0 ? `<div class="calories">📊 ${item.calories} kcal</div>` : ''}
-                `;
-                
-                timeline.appendChild(div);
-            });
-        }
+    function loadSoundPreference() {
+      const savedSound = localStorage.getItem("soundEnabled");
+      if (savedSound !== null) {
+        soundEnabled = savedSound === "true";
+        document.getElementById("soundToggle").checked = soundEnabled;
+        const label = document.querySelector('label[for="soundToggle"]');
+        label.textContent = soundEnabled ? "🔊 Signalton aktiviert" : "🔇 Signalton deaktiviert";
+      }
+    }
 
-        function updateNextItem() {
-            const { currentIndex, nextIndex } = findCurrentAndNext();
-            const nextItemDiv = document.getElementById('nextItem');
-            const statusDiv = document.getElementById('status');
-            
-            if (nextIndex === -1) {
-                nextItemDiv.innerHTML = `
-                    <div class="next-item">
-                        <h2>✅ Tagesplan abgeschlossen!</h2>
-                        <div class="description">Alle Punkte für heute erledigt. Gute Nacht! 🌙</div>
-                    </div>
-                `;
-                statusDiv.textContent = 'Tagesplan abgeschlossen';
-            } else {
-                const nextItem = schedule[nextIndex];
-                const currentMinutes = getCurrentMinutes();
-                const nextMinutes = getTimeInMinutes(nextItem.time);
-                const minutesUntil = nextMinutes - currentMinutes;
-                
-                nextItemDiv.innerHTML = `
-                    <div class="next-item">
-                        <h2>Als Nächstes:</h2>
-                        <div class="time">${nextItem.time} Uhr</div>
-                        <div class="description">
-                            <strong>${nextItem.title}</strong><br>
-                            ${nextItem.description ? `${nextItem.description}<br>` : ''}
-                            ${nextItem.calories > 0 ? `<br>📊 ${nextItem.calories} kcal` : ''}
-                        </div>
-                    </div>
-                `;
-                
-                if (minutesUntil <= 0) {
-                    statusDiv.textContent = '⏰ JETZT!';
-                } else if (minutesUntil < 60) {
-                    statusDiv.textContent = `⏰ In ${minutesUntil} Minuten`;
-                } else {
-                    const hours = Math.floor(minutesUntil / 60);
-                    const mins = minutesUntil % 60;
-                    statusDiv.textContent = `⏰ In ${hours}h ${mins}min`;
-                }
-            }
-        }
+    function init() {
+      loadTheme();
+      loadSoundPreference();
+      loadOffset();
 
-        function checkForNotifications() {
-            if (Notification.permission !== 'granted') return;
-            
-            const { currentIndex, nextIndex } = findCurrentAndNext();
-            
-            if (nextIndex !== -1 && nextIndex !== lastNotifiedIndex) {
-                const nextItem = schedule[nextIndex];
-                const currentMinutes = getCurrentMinutes();
-                const nextMinutes = getTimeInMinutes(nextItem.time);
-                const minutesUntil = nextMinutes - currentMinutes;
-                
-                // Benachrichtigung wenn Zeit erreicht ist (innerhalb von 10 Minuten Toleranz)
-                if (minutesUntil <= 0 && minutesUntil > -10) {
-                    console.log('Sende Benachrichtigung für:', nextItem.title, 'um', nextItem.time);
-                    sendNotification(nextItem);
-                    lastNotifiedIndex = nextIndex;
-                }
-            }
-        }
+      updateTime();
+      updateTimeline();
+      updateNextItem();
 
-        function playSound() {
-            try {
-                // Erzeuge einen angenehmen Benachrichtigungston
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Wichtig: AudioContext muss möglicherweise erst resumed werden
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-                
-                // Erster Ton (höher)
-                const oscillator1 = audioContext.createOscillator();
-                const gainNode1 = audioContext.createGain();
-                oscillator1.connect(gainNode1);
-                gainNode1.connect(audioContext.destination);
-                oscillator1.frequency.value = 800;
-                oscillator1.type = 'sine';
-                gainNode1.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-                oscillator1.start(audioContext.currentTime);
-                oscillator1.stop(audioContext.currentTime + 0.3);
-                
-                // Zweiter Ton (tiefer) nach kurzer Pause
-                setTimeout(() => {
-                    const oscillator2 = audioContext.createOscillator();
-                    const gainNode2 = audioContext.createGain();
-                    oscillator2.connect(gainNode2);
-                    gainNode2.connect(audioContext.destination);
-                    oscillator2.frequency.value = 600;
-                    oscillator2.type = 'sine';
-                    gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-                    oscillator2.start(audioContext.currentTime);
-                    oscillator2.stop(audioContext.currentTime + 0.4);
-                }, 200);
-                
-                console.log('Sound erfolgreich abgespielt, AudioContext State:', audioContext.state);
-            } catch (error) {
-                console.error('Fehler beim Abspielen des Sounds:', error);
-            }
-        }
+      if (Notification.permission === "default") {
+        document.getElementById("notificationAlert").classList.add("show");
+      }
 
-        function sendNotification(item) {
-            console.log('sendNotification aufgerufen für:', item.title, 'Sound:', soundEnabled);
-            
-            // Spiele Signalton ab, wenn aktiviert
-            if (soundEnabled) {
-                console.log('Spiele Sound ab...');
-                playSound();
-            }
-            
-            const notification = new Notification('🍽️ Tagesplan Erinnerung', {
-                body: `${item.time} Uhr: ${item.title}${item.description ? '\n' + item.description : ''}`,
-                icon: '🔔',
-                tag: 'meal-reminder',
-                requireInteraction: true
-            });
-            
-            notification.onclick = function() {
-                window.focus();
-                notification.close();
-            };
-        }
+      setInterval(() => {
+        updateTime();
+        updateTimeline();
+        updateNextItem();
+        checkForNotifications();
+      }, 10000);
+    }
 
-        function requestNotificationPermission() {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    document.getElementById('notificationAlert').classList.remove('show');
-                    alert('✅ Benachrichtigungen aktiviert!');
-                }
-            });
-        }
-
-        function testNotification() {
-            if (Notification.permission === 'granted') {
-                if (soundEnabled) {
-                    playSound();
-                }
-                new Notification('🍽️ Test-Benachrichtigung', {
-                    body: 'Die Benachrichtigungen funktionieren! Du wirst zur richtigen Zeit erinnert.',
-                    icon: '🔔'
-                });
-            } else if (Notification.permission === 'denied') {
-                alert('Benachrichtigungen wurden blockiert. Bitte aktiviere sie in den Browser-Einstellungen.');
-            } else {
-                requestNotificationPermission();
-            }
-        }
-
-        function toggleSound() {
-            soundEnabled = document.getElementById('soundToggle').checked;
-            localStorage.setItem('soundEnabled', soundEnabled);
-            
-            const label = document.querySelector('label[for="soundToggle"]');
-            if (soundEnabled) {
-                label.textContent = '🔊 Signalton aktiviert';
-                playSound(); // Spiele Ton als Bestätigung
-            } else {
-                label.textContent = '🔇 Signalton deaktiviert';
-            }
-        }
-
-        function scrollToNext() {
-            const { currentIndex } = findCurrentAndNext();
-            const nextIndex = currentIndex + 1;
-            if (nextIndex < schedule.length) {
-                document.getElementById(`item-${nextIndex}`).scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
-                });
-            }
-        }
-
-        function toggleTheme() {
-            document.body.classList.toggle('medical');
-            const isMedical = document.body.classList.contains('medical');
-            localStorage.setItem('theme', isMedical ? 'medical' : 'default');
-        }
-
-        function loadTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'medical') {
-                document.body.classList.add('medical');
-            }
-        }
-
-        function loadSoundPreference() {
-            const savedSound = localStorage.getItem('soundEnabled');
-            if (savedSound !== null) {
-                soundEnabled = savedSound === 'true';
-                document.getElementById('soundToggle').checked = soundEnabled;
-                const label = document.querySelector('label[for="soundToggle"]');
-                label.textContent = soundEnabled ? '🔊 Signalton aktiviert' : '🔇 Signalton deaktiviert';
-            }
-        }
-
-        function init() {
-            loadTheme();
-            loadSoundPreference();
-            updateTime();
-            updateTimeline();
-            updateNextItem();
-            
-            if (Notification.permission === 'default') {
-                document.getElementById('notificationAlert').classList.add('show');
-            }
-            
-            setInterval(() => {
-                updateTime();
-                updateTimeline();
-                updateNextItem();
-                checkForNotifications();
-            }, 10000); // Alle 10 Sekunden aktualisieren
-        }
-
-        init();
-    </script>
+    init();
+  </script>
 </body>
 </html>
