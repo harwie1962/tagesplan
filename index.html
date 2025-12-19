@@ -135,7 +135,6 @@
     }
     .notification-permission.show{ display:block; }
 
-    /* Offset-Panel */
     .offset-panel{
       background:#f1f3f5;
       border:2px dashed rgba(0,0,0,.15);
@@ -205,13 +204,21 @@
   </div>
 
   <script>
-    // NEUER PLAN (Morgen) – integriert
-    // Hinweis: Medikamente sind hier NICHT aufgeführt (wie in deinem neuen Plan).
-    // Wenn du sie zusätzlich drin haben willst, sag "mit Medikamenten" – dann baue ich sie wieder ein.
+    // MORGEN-PLAN + MEDIKAMENTE + NAHRUNGSERGÄNZUNG (integriert)
     const schedule = [
-      { time: "06:30", title: "Start", description: "Wasser 300 ml + L-Glutamin 5 g", calories: 0 },
+      { time: "06:15", title: "Prednisolon", description: "", calories: 0 },
+
+      { time: "06:30", title: "Vitamin-B-Komplex", description: "", calories: 0 },
+      { time: "06:40", title: "Magnesium-Malat", description: "", calories: 0 },
+      { time: "06:45", title: "L-Glutamin", description: "5 g (mit Wasser)", calories: 0 },
+
+      { time: "07:00", title: "Medikamente + Supplemente (morgens)", description: "Eliquis/Apixaban 5 mg + Finerenon 10 mg + Vitamin D3/K2 + Omega-3 + Q10", calories: 0 },
 
       { time: "07:00", title: "Frühstück (sanft, sättigend)", description: "Haferflocken 50 g, Magerquark 150 g, Beeren 80 g, Leinöl 1 EL, Flohsamen 1 TL", calories: 350 },
+
+      { time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
+
+      { time: "09:00", title: "Herz/Niere", description: "Bisoprolol, Amlodipin, Ezetimib", calories: 0 },
 
       { time: "09:30", title: "Eiweißblock (klein)", description: "1 Ei (gekocht) + Magerquark 100 g", calories: 150 },
 
@@ -219,13 +226,20 @@
 
       { time: "15:30", title: "Kleine Kohlenhydratportion", description: "Haferflocken 30 g + Wasser oder Tee", calories: 115 },
 
+      { time: "17:30", title: "L-Glutamin (2. Portion)", description: "3–5 g", calories: 0 },
+
+      { time: "18:00", title: "Abendmedikamente", description: "Eliquis/Apixaban 5 mg + Rosuvastatin + Ramipril (+ ggf. Artischocke)", calories: 0 },
+
       { time: "18:30", title: "Leicht & warm", description: "Buchweizen (gekocht) 60 g + Gemüse 250 g + Miso-Dashi 1–2 TL", calories: 220 },
 
-      { time: "20:30", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 }
+      { time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
+      { time: "20:30", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 },
+
+      { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
     ];
 
     // ===== Zeitversatz-Logik =====
-    const PLAN_START = "06:30";           // Anker im neuen Plan
+    const PLAN_START = "06:15";
     const OFFSET_KEY = "scheduleOffsetMin";
     const ANCHOR_KEY = "scheduleAnchorTime";
 
