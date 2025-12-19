@@ -4,153 +4,313 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tagesplan Erinnerungen - 1500 kcal</title>
+
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
 
+    /* ========= THEME: DEFAULT (NEU – "Harald/Nova": ruhiger, technischer, weniger „Candy“) ========= */
     body{
       font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(110,231,255,.18), transparent 55%),
+        radial-gradient(1000px 700px at 80% 15%, rgba(167,139,250,.16), transparent 60%),
+        radial-gradient(900px 650px at 50% 90%, rgba(34,197,94,.10), transparent 60%),
+        linear-gradient(135deg,#0b1220 0%, #101a33 45%, #0b1326 100%);
       min-height:100vh;
       padding:20px;
+      color:#eaf0ff;
       transition:background .5s ease;
     }
-    body.medical{ background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%); }
+
+    /* ========= THEME: MEDICAL (GRÜN) – UNVERÄNDERT LASSEN ========= */
+    body.medical{
+      background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%);
+      color:#102014;
+    }
 
     .container{
-      max-width:800px; margin:0 auto; background:#fff;
-      border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,.3);
+      max-width:820px;
+      margin:0 auto;
+      background:rgba(255,255,255,.92);
+      border-radius:22px;
+      box-shadow:0 20px 60px rgba(0,0,0,.35);
       overflow:hidden;
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+    }
+    body.medical .container{
+      background:#fff;
+      border:0;
+      backdrop-filter:none;
     }
 
     .header{
-      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-      color:#fff; padding:30px; text-align:center;
+      background:
+        linear-gradient(135deg, rgba(11,18,32,.92) 0%, rgba(16,26,51,.92) 60%, rgba(11,19,38,.92) 100%),
+        radial-gradient(900px 260px at 15% 0%, rgba(110,231,255,.25), transparent 60%),
+        radial-gradient(900px 260px at 85% 0%, rgba(167,139,250,.22), transparent 60%);
+      color:#fff;
+      padding:28px 28px 22px;
+      text-align:center;
       transition:background .5s ease;
+      border-bottom:1px solid rgba(255,255,255,.10);
     }
-    body.medical .header{ background:linear-gradient(135deg,#2e7d32 0%,#1b5e20 100%); }
+    body.medical .header{
+      /* GRÜN unverändert wie zuvor */
+      background:linear-gradient(135deg,#2e7d32 0%,#1b5e20 100%);
+      border-bottom:0;
+    }
 
-    .header h1{ font-size:28px; margin-bottom:10px; }
+    .header h1{
+      font-size:26px;
+      margin-bottom:10px;
+      letter-spacing:.2px;
+    }
 
     .current-time{
-      font-size:48px; font-weight:bold; margin:20px 0;
-      text-shadow:2px 2px 4px rgba(0,0,0,.2);
+      font-size:46px;
+      font-weight:800;
+      margin:18px 0 12px;
+      text-shadow:2px 2px 8px rgba(0,0,0,.35);
     }
 
     .status{
-      font-size:18px; padding:10px 20px;
-      background:rgba(255,255,255,.2);
-      border-radius:10px; display:inline-block;
+      font-size:15px;
+      padding:10px 16px;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:12px;
+      display:inline-block;
     }
 
     .sound-toggle{
-      display:inline-flex; align-items:center; gap:10px;
-      padding:10px 15px; background:rgba(255,255,255,.2);
-      border-radius:10px; margin-top:10px; flex-wrap:wrap;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:12px;
+      margin-top:12px;
+      flex-wrap:wrap;
       justify-content:center;
     }
     .sound-toggle input{ width:20px; height:20px; cursor:pointer; }
 
-    .content{ padding:30px; }
+    .content{
+      padding:26px;
+      color:#0e172a;
+    }
+    body.medical .content{ color:#0e1b12; }
 
     .next-item{
-      background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);
-      color:#fff; padding:25px; border-radius:15px; margin-bottom:30px;
-      box-shadow:0 10px 30px rgba(240,147,251,.3);
+      background:
+        linear-gradient(135deg, rgba(15,23,42,.96) 0%, rgba(30,41,59,.96) 100%),
+        radial-gradient(700px 220px at 15% 10%, rgba(110,231,255,.25), transparent 60%),
+        radial-gradient(700px 220px at 85% 10%, rgba(167,139,250,.22), transparent 60%);
+      color:#fff;
+      padding:22px;
+      border-radius:16px;
+      margin-bottom:26px;
+      box-shadow:0 14px 36px rgba(0,0,0,.25);
       transition:background .5s ease, box-shadow .5s ease;
+      border:1px solid rgba(255,255,255,.10);
     }
     body.medical .next-item{
       background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);
       box-shadow:0 10px 30px rgba(76,175,80,.3);
+      border:0;
     }
 
-    .next-item h2{ font-size:20px; margin-bottom:15px; display:flex; align-items:center; gap:10px; }
-    .next-item h2::before{ content:"⏰"; font-size:24px; }
+    .next-item h2{
+      font-size:18px;
+      margin-bottom:12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      letter-spacing:.2px;
+    }
+    .next-item h2::before{ content:"⏰"; font-size:22px; }
 
-    .next-item .time{ font-size:32px; font-weight:bold; margin-bottom:10px; }
-    .next-item .description{ font-size:16px; line-height:1.6; }
+    .next-item .time{
+      font-size:30px;
+      font-weight:800;
+      margin-bottom:8px;
+      letter-spacing:.3px;
+    }
+    .next-item .description{ font-size:15px; line-height:1.6; opacity:.96; }
 
-    .timeline{ position:relative; padding-left:40px; }
+    .timeline{ position:relative; padding-left:38px; }
     .timeline::before{
-      content:""; position:absolute; left:15px; top:0; bottom:0; width:3px;
-      background:linear-gradient(180deg,#667eea 0%,#764ba2 100%);
+      content:"";
+      position:absolute;
+      left:14px;
+      top:0;
+      bottom:0;
+      width:3px;
+      background:linear-gradient(180deg, rgba(110,231,255,.85) 0%, rgba(167,139,250,.85) 55%, rgba(34,197,94,.65) 100%);
       transition:background .5s ease;
+      border-radius:3px;
     }
-    body.medical .timeline::before{ background:linear-gradient(180deg,#66bb6a 0%,#388e3c 100%); }
+    body.medical .timeline::before{
+      background:linear-gradient(180deg,#66bb6a 0%,#388e3c 100%);
+    }
 
     .timeline-item{
-      position:relative; padding:15px; margin-bottom:15px;
-      background:#f8f9fa; border-radius:10px; transition:all .3s ease;
+      position:relative;
+      padding:14px 14px 12px;
+      margin-bottom:12px;
+      background:#f6f7fb;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:12px;
+      transition:all .25s ease;
     }
     .timeline-item::before{
-      content:""; position:absolute; left:-33px; top:20px; width:15px; height:15px;
-      border-radius:50%; background:#fff; border:3px solid #667eea;
-      transition:border-color .5s ease;
+      content:"";
+      position:absolute;
+      left:-31px;
+      top:18px;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:#fff;
+      border:3px solid rgba(110,231,255,.9);
+      transition:border-color .5s ease, background .5s ease;
+      box-shadow:0 2px 8px rgba(0,0,0,.12);
     }
     body.medical .timeline-item::before{ border-color:#4caf50; }
 
-    .timeline-item.completed{ opacity:.5; background:#e9ecef; }
-    .timeline-item.completed::before{ background:#28a745; border-color:#28a745; }
+    .timeline-item:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 20px rgba(2,6,23,.10);
+      background:#ffffff;
+    }
+
+    .timeline-item.completed{ opacity:.55; background:#eef0f6; }
+    .timeline-item.completed::before{ background:#22c55e; border-color:#22c55e; }
 
     .timeline-item.current{
-      background:linear-gradient(135deg,#ffeaa7 0%,#fdcb6e 100%);
-      transform:scale(1.02);
-      box-shadow:0 5px 15px rgba(253,203,110,.4);
+      background:linear-gradient(135deg,#e8f1ff 0%, #f3e8ff 70%, #e8fff1 100%);
+      transform:scale(1.01);
+      box-shadow:0 10px 22px rgba(2,6,23,.12);
+      border-color:rgba(110,231,255,.35);
     }
     body.medical .timeline-item.current{
       background:linear-gradient(135deg,#c8e6c9 0%,#a5d6a7 100%);
       box-shadow:0 5px 15px rgba(165,214,167,.4);
+      border-color:transparent;
     }
     .timeline-item.current::before{
-      background:#fdcb6e; border-color:#fdcb6e; animation:pulse 2s infinite;
+      background:rgba(110,231,255,.95);
+      border-color:rgba(110,231,255,.95);
+      animation:pulse 2s infinite;
+    }
+    body.medical .timeline-item.current::before{
+      background:#2e7d32;
+      border-color:#2e7d32;
     }
     @keyframes pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
 
-    .timeline-item .time{ font-weight:bold; color:#667eea; font-size:18px; margin-bottom:5px; transition:color .5s ease; }
-    body.medical .timeline-item .time{ color:#2e7d32; }
-    .timeline-item.current .time{ color:#d63031; }
+    .timeline-item .time{
+      font-weight:800;
+      color:#0b1220;
+      font-size:16px;
+      margin-bottom:6px;
+    }
+    body.medical .timeline-item .time{ color:#1b5e20; }
+    .timeline-item.current .time{ color:#0b1220; }
     body.medical .timeline-item.current .time{ color:#1b5e20; }
 
-    .timeline-item .description{ color:#2d3436; font-size:14px; line-height:1.5; }
-    .timeline-item .calories{ color:#0984e3; font-weight:bold; margin-top:5px; font-size:13px; }
+    .timeline-item .description{ color:#111827; font-size:13.5px; line-height:1.5; }
+    body.medical .timeline-item .description{ color:#102014; }
 
-    .controls{ display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+    .timeline-item .calories{
+      color:#2563eb;
+      font-weight:800;
+      margin-top:6px;
+      font-size:12.5px;
+    }
+    body.medical .timeline-item .calories{ color:#1b5e20; }
+
+    .controls{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
 
     .btn{
-      padding:12px 24px; border:none; border-radius:10px;
-      font-size:16px; cursor:pointer; transition:all .3s ease; font-weight:600;
+      padding:12px 18px;
+      border:none;
+      border-radius:12px;
+      font-size:15px;
+      cursor:pointer;
+      transition:all .25s ease;
+      font-weight:800;
+      letter-spacing:.1px;
     }
 
-    .btn-primary{ background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#fff; }
-    body.medical .btn-primary{ background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%); }
+    .btn-primary{
+      background:linear-gradient(135deg,#0ea5e9 0%, #8b5cf6 55%, #22c55e 110%);
+      color:#fff;
+      box-shadow:0 10px 24px rgba(2,6,23,.18);
+    }
+    body.medical .btn-primary{
+      background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);
+      box-shadow:none;
+    }
 
-    .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 5px 15px rgba(102,126,234,.4); }
-    body.medical .btn-primary:hover{ box-shadow:0 5px 15px rgba(76,175,80,.4); }
+    .btn-primary:hover{
+      transform:translateY(-2px);
+      box-shadow:0 14px 30px rgba(2,6,23,.22);
+      filter:saturate(1.05);
+    }
+    body.medical .btn-primary:hover{
+      box-shadow:0 5px 15px rgba(76,175,80,.4);
+      filter:none;
+    }
 
-    .btn-secondary{ background:#ecf0f1; color:#2d3436; }
-    .btn-secondary:hover{ background:#dfe6e9; }
+    .btn-secondary{
+      background:#eef2f7;
+      color:#0b1220;
+      border:1px solid rgba(15,23,42,.10);
+    }
+    .btn-secondary:hover{ background:#e6ebf3; transform:translateY(-1px); }
 
     .notification-permission{
-      background:#fff3cd; border:2px solid #ffc107;
-      padding:15px; border-radius:10px; margin-bottom:20px; display:none;
+      background:#fff3cd;
+      border:2px solid #ffc107;
+      padding:14px;
+      border-radius:12px;
+      margin-bottom:16px;
+      display:none;
+      color:#1f2937;
     }
     .notification-permission.show{ display:block; }
 
     .offset-panel{
-      background:#f1f3f5;
-      border:2px dashed rgba(0,0,0,.15);
-      padding:15px;
-      border-radius:12px;
-      margin-bottom:20px;
+      background:#f3f4f6;
+      border:2px dashed rgba(0,0,0,.14);
+      padding:14px;
+      border-radius:14px;
+      margin-bottom:16px;
+      color:#111827;
     }
-    .offset-panel h3{ margin-bottom:10px; color:#2d3436; font-size:16px; }
+    .offset-panel h3{ margin-bottom:10px; color:#0b1220; font-size:15px; }
+    body.medical .offset-panel{ background:#fff; }
+    body.medical .offset-panel h3{ color:#1b5e20; }
+
     .offset-row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .offset-row label{ font-weight:600; color:#2d3436; }
+    .offset-row label{ font-weight:800; color:#0b1220; }
+    body.medical .offset-row label{ color:#1b5e20; }
+
     .offset-row input[type="time"]{
-      padding:10px 12px; border-radius:10px; border:1px solid #ced4da;
-      font-size:16px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid #ced4da;
+      font-size:15px;
+      background:#fff;
     }
-    .hint{ margin-top:10px; font-size:13px; color:#495057; line-height:1.4; }
-    .hint code{ background:rgba(0,0,0,.05); padding:2px 6px; border-radius:6px; }
+    .offset-row input[type="checkbox"]{ width:18px; height:18px; cursor:pointer; }
+
+    .hint{ margin-top:10px; font-size:12.5px; color:#374151; line-height:1.45; }
+    .hint code{ background:rgba(0,0,0,.06); padding:2px 6px; border-radius:8px; }
+
   </style>
 </head>
 
@@ -175,7 +335,6 @@
         </button>
       </div>
 
-      <!-- Offset-Panel: Standard nur morgens bis 12:00, optional ganzer Tag -->
       <div class="offset-panel">
         <h3>⏱️ Verschlafen-Modus (Zeitversatz)</h3>
 
@@ -208,13 +367,13 @@
 
       <div id="nextItem"></div>
 
-      <h3 style="margin-bottom:20px;color:#2d3436;">📋 Tagesübersicht</h3>
+      <h3 style="margin-bottom:18px;color:#111827;">📋 Tagesübersicht</h3>
       <div class="timeline" id="timeline"></div>
     </div>
   </div>
 
   <script>
-    // MORGEN-PLAN + MEDIKAMENTE + NAHRUNGSERGÄNZUNG (integriert)
+    // MORGEN-PLAN + MEDIKAMENTE + NAHRUNGSERGÄNZUNG
     const schedule = [
       { time: "06:15", title: "Prednisolon", description: "", calories: 0 },
 
@@ -248,13 +407,13 @@
       { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
     ];
 
-    // ===== Offset-Logik (NEU): Standard nur morgens bis 12:00, optional ganzer Tag =====
+    // ===== Offset-Logik: Standard nur morgens bis 12:00, optional ganzer Tag =====
     const PLAN_START = "06:15";
     const OFFSET_KEY = "scheduleOffsetMin";
     const ANCHOR_KEY = "scheduleAnchorTime";
 
     const APPLY_ALL_KEY = "scheduleOffsetApplyAllDay";
-    const MORNING_CUTOFF = "12:00"; // ab dieser Uhrzeit: Standard = kein Offset
+    const MORNING_CUTOFF = "12:00";
 
     let offsetMinutes = 0;
     let applyAllDay = false;
@@ -285,7 +444,6 @@
       const baseMin = getTimeInMinutes(item.time);
       const cutoffMin = getTimeInMinutes(MORNING_CUTOFF);
 
-      // nur vor 12:00 verschieben
       return baseMin < cutoffMin ? offsetMinutes : 0;
     }
 
@@ -360,8 +518,7 @@
       updateNextItem();
     }
 
-    // ===== Bestehende Anzeige-Logik =====
-
+    // ===== Anzeige-Logik =====
     function updateTime() {
       const now = new Date();
       document.getElementById("currentTime").textContent = now.toLocaleTimeString("de-DE");
@@ -377,14 +534,14 @@
 
       indexed.sort((a, b) => a.eff - b.eff);
 
-      let next = indexed.find(x => x.eff > currentMinutes);
-      let nextIndex = next ? next.index : -1;
+      const next = indexed.find(x => x.eff > currentMinutes);
+      const nextIndex = next ? next.index : -1;
 
       let currentSortedPos = -1;
       for (let i = 0; i < indexed.length; i++) {
         if (indexed[i].eff <= currentMinutes) currentSortedPos = i;
       }
-      let currentIndex = currentSortedPos >= 0 ? indexed[currentSortedPos].index : -1;
+      const currentIndex = currentSortedPos >= 0 ? indexed[currentSortedPos].index : -1;
 
       return { currentIndex, nextIndex, sorted: indexed };
     }
@@ -392,7 +549,6 @@
     function updateTimeline() {
       const timeline = document.getElementById("timeline");
       const { currentIndex, sorted } = findCurrentAndNext();
-
       timeline.innerHTML = "";
 
       sorted.forEach(({ item, index }) => {
@@ -416,7 +572,6 @@
           </div>
           ${item.calories > 0 ? `<div class="calories">📊 ${item.calories} kcal</div>` : ""}
         `;
-
         timeline.appendChild(div);
       });
     }
@@ -430,7 +585,7 @@
         nextItemDiv.innerHTML = `
           <div class="next-item">
             <h2>✅ Tagesplan abgeschlossen!</h2>
-            <div class="description">Alle Punkte für heute erledigt. Gute Nacht! 🌙</div>
+            <div class="description">Alle Punkte für heute erledigt.</div>
           </div>
         `;
         statusDiv.textContent = "Tagesplan abgeschlossen";
@@ -489,8 +644,7 @@
       }
     }
 
-    // ===== Sound/Notification/Theme =====
-
+    // ===== Sound / Notification / Theme =====
     function playSound() {
       try {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -526,7 +680,6 @@
 
     function sendNotification(item) {
       if (soundEnabled) playSound();
-
       const effTime = getEffectiveItemTimeStr(item);
 
       const notification = new Notification("🍽️ Tagesplan Erinnerung", {
@@ -555,7 +708,7 @@
       if (Notification.permission === "granted") {
         if (soundEnabled) playSound();
         new Notification("🍽️ Test-Benachrichtigung", {
-          body: "Die Benachrichtigungen funktionieren! Du wirst zur richtigen Zeit erinnert.",
+          body: "Die Benachrichtigungen funktionieren!",
           icon: "🔔"
         });
       } else if (Notification.permission === "denied") {
@@ -581,10 +734,7 @@
     function scrollToNext() {
       const { nextIndex } = findCurrentAndNext();
       if (nextIndex !== -1) {
-        document.getElementById(`item-${nextIndex}`).scrollIntoView({
-          behavior: "smooth",
-          block: "center"
-        });
+        document.getElementById(`item-${nextIndex}`).scrollIntoView({ behavior:"smooth", block:"center" });
       }
     }
 
