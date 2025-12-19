@@ -8,7 +8,7 @@
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
 
-    /* ========= THEME: DEFAULT (ruhiger, technisch) ========= */
+    /* ========= THEME: DEFAULT (NEU – "Harald/Nova": ruhiger, technischer, weniger „Candy“) ========= */
     body{
       font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
       background:
@@ -20,30 +20,28 @@
       padding:20px;
       color:#eaf0ff;
       transition:background .5s ease;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
 
-    /* ========= THEME: MEDICAL (GRÜN) – UNVERÄNDERT ========= */
+    /* ========= THEME: MEDICAL (GRÜN) – UNVERÄNDERT LASSEN ========= */
     body.medical{
       background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%);
       color:#102014;
     }
 
-    /* WICHTIG: backdrop-filter raus -> deutlich flüssiger */
     .container{
       max-width:820px;
       margin:0 auto;
-      background:rgba(255,255,255,.95);
+      background:rgba(255,255,255,.92);
       border-radius:22px;
-      box-shadow:0 14px 40px rgba(0,0,0,.28);
+      box-shadow:0 20px 60px rgba(0,0,0,.35);
       overflow:hidden;
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
     }
     body.medical .container{
       background:#fff;
       border:0;
-      box-shadow:0 20px 60px rgba(0,0,0,.30);
+      backdrop-filter:none;
     }
 
     .header{
@@ -58,6 +56,7 @@
       border-bottom:1px solid rgba(255,255,255,.10);
     }
     body.medical .header{
+      /* GRÜN unverändert wie zuvor */
       background:linear-gradient(135deg,#2e7d32 0%,#1b5e20 100%);
       border-bottom:0;
     }
@@ -164,7 +163,7 @@
       background:#f6f7fb;
       border:1px solid rgba(15,23,42,.08);
       border-radius:12px;
-      transition:background .2s ease; /* weniger teuer als "all" */
+      transition:all .25s ease;
     }
     .timeline-item::before{
       content:"";
@@ -176,16 +175,15 @@
       border-radius:50%;
       background:#fff;
       border:3px solid rgba(110,231,255,.9);
-      transition:border-color .3s ease, background .3s ease;
+      transition:border-color .5s ease, background .5s ease;
       box-shadow:0 2px 8px rgba(0,0,0,.12);
     }
     body.medical .timeline-item::before{ border-color:#4caf50; }
 
-    /* Hover im Default entschärft -> weniger ruckeln beim Scrollen */
     .timeline-item:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 20px rgba(2,6,23,.10);
       background:#ffffff;
-      box-shadow:none;
-      transform:none;
     }
 
     .timeline-item.completed{ opacity:.55; background:#eef0f6; }
@@ -193,6 +191,7 @@
 
     .timeline-item.current{
       background:linear-gradient(135deg,#e8f1ff 0%, #f3e8ff 70%, #e8fff1 100%);
+      transform:scale(1.01);
       box-shadow:0 10px 22px rgba(2,6,23,.12);
       border-color:rgba(110,231,255,.35);
     }
@@ -219,6 +218,9 @@
       margin-bottom:6px;
     }
     body.medical .timeline-item .time{ color:#1b5e20; }
+    .timeline-item.current .time{ color:#0b1220; }
+    body.medical .timeline-item.current .time{ color:#1b5e20; }
+
     .timeline-item .description{ color:#111827; font-size:13.5px; line-height:1.5; }
     body.medical .timeline-item .description{ color:#102014; }
 
@@ -238,7 +240,7 @@
       border-radius:12px;
       font-size:15px;
       cursor:pointer;
-      transition:transform .2s ease, box-shadow .2s ease;
+      transition:all .25s ease;
       font-weight:800;
       letter-spacing:.1px;
     }
@@ -256,9 +258,11 @@
     .btn-primary:hover{
       transform:translateY(-2px);
       box-shadow:0 14px 30px rgba(2,6,23,.22);
+      filter:saturate(1.05);
     }
     body.medical .btn-primary:hover{
       box-shadow:0 5px 15px rgba(76,175,80,.4);
+      filter:none;
     }
 
     .btn-secondary{
@@ -306,6 +310,7 @@
 
     .hint{ margin-top:10px; font-size:12.5px; color:#374151; line-height:1.45; }
     .hint code{ background:rgba(0,0,0,.06); padding:2px 6px; border-radius:8px; }
+
   </style>
 </head>
 
@@ -368,48 +373,95 @@
   </div>
 
   <script>
-    // ===== NEU: Scroll-Detektor (damit Timeline beim Scrollen nicht dauernd neu gerendert wird) =====
-    let isScrolling = false;
-    let scrollTimer = null;
-    window.addEventListener("scroll", () => {
-      isScrolling = true;
-      if (scrollTimer) clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => { isScrolling = false; }, 180);
-    }, { passive: true });
+    // ===============================
+// 🌅 MORGEN – Medikamente & Start
+// ===============================
+{ time: "06:15", title: "Prednisolon", description: "", calories: 0 },
 
-    // MORGEN-PLAN + MEDIKAMENTE + NAHRUNGSERGÄNZUNG
-    const schedule = [
-      { time: "06:15", title: "Prednisolon", description: "", calories: 0 },
+{ time: "06:30", title: "Vitamin-B-Komplex", description: "", calories: 0 },
+{ time: "06:40", title: "Magnesium-Malat", description: "", calories: 0 },
+{ time: "06:45", title: "L-Glutamin", description: "5 g (mit Wasser)", calories: 0 },
 
-      { time: "06:30", title: "Vitamin-B-Komplex", description: "", calories: 0 },
-      { time: "06:40", title: "Magnesium-Malat", description: "", calories: 0 },
-      { time: "06:45", title: "L-Glutamin", description: "5 g (mit Wasser)", calories: 0 },
+{ time: "07:00", title: "Medikamente + Supplemente (morgens)",
+  description: "Eliquis/Apixaban 5 mg + Finerenon 10 mg + Vitamin D3/K2 + Omega-3 + Q10",
+  calories: 0
+},
 
-      { time: "07:00", title: "Medikamente + Supplemente (morgens)", description: "Eliquis/Apixaban 5 mg + Finerenon 10 mg + Vitamin D3/K2 + Omega-3 + Q10", calories: 0 },
+// ===============================
+// 🍽️ FRÜHSTÜCK
+// ===============================
+{ time: "07:00", title: "Frühstück",
+  description: "Haferflocken 50 g, Magerquark 150 g, Beeren 80 g, Leinöl 1 EL, Flohsamen 1 TL",
+  calories: 350
+},
 
-      { time: "07:00", title: "Frühstück (sanft, sättigend)", description: "Haferflocken 50 g, Magerquark 150 g, Beeren 80 g, Leinöl 1 EL, Flohsamen 1 TL", calories: 350 },
+{ time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
 
-      { time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
+// ===============================
+// ❤️ VORMITTAG – Herz / Niere
+// ===============================
+{ time: "09:00", title: "Herz / Niere",
+  description: "Bisoprolol, Amlodipin, Ezetimib",
+  calories: 0
+},
 
-      { time: "09:00", title: "Herz/Niere", description: "Bisoprolol, Amlodipin, Ezetimib", calories: 0 },
+{ time: "09:30", title: "Eiweißblock (klein)",
+  description: "1 Ei (gekocht) + Magerquark 100 g",
+  calories: 150
+},
 
-      { time: "09:30", title: "Eiweißblock (klein)", description: "1 Ei (gekocht) + Magerquark 100 g", calories: 150 },
+// ===============================
+// 🍽️ MITTAG – Hauptmahlzeit
+// ===============================
+{ time: "12:30", title: "Hauptmahlzeit (gekocht, ggf. abgekühlt)",
+  description: "Kartoffeln 250 g, Gemüse 300 g, Hähnchenbrust 120 g, Olivenöl 1 TL",
+  calories: 420
+},
 
-      { time: "12:30", title: "Hauptmahlzeit (gekocht, ggf. abgekühlt)", description: "Kartoffeln 250 g, Gemüse 300 g (z.B. Brokkoli/Karotten/Bohnen), Hähnchenbrust 120 g, Olivenöl 1 TL", calories: 420 },
+// 👉 ARTISCHOCKE FEST VERANKERT
+{ time: "13:00", title: "Artischocke",
+  description: "Leber / Galle",
+  calories: 0
+},
 
-      { time: "15:30", title: "Kleine Kohlenhydratportion", description: "Haferflocken 30 g + Wasser oder Tee", calories: 115 },
+// ===============================
+// ☕ NACHMITTAG
+// ===============================
+{ time: "15:30", title: "Kleine Kohlenhydratportion",
+  description: "Haferflocken 30 g + Wasser oder Tee",
+  calories: 115
+},
 
-      { time: "17:30", title: "L-Glutamin (2. Portion)", description: "3–5 g", calories: 0 },
+{ time: "17:30", title: "L-Glutamin (2. Portion)",
+  description: "3–5 g",
+  calories: 0
+},
 
-      { time: "18:00", title: "Abendmedikamente", description: "Eliquis/Apixaban 5 mg + Rosuvastatin + Ramipril (+ ggf. Artischocke)", calories: 0 },
+// ===============================
+// 🌙 ABEND – Medikamente & Essen
+// ===============================
+{ time: "18:00", title: "Abendmedikamente",
+  description: "Eliquis/Apixaban 5 mg + Rosuvastatin + Ramipril",
+  calories: 0
+},
 
-      { time: "18:30", title: "Leicht & warm", description: "Buchweizen (gekocht) 60 g + Gemüse 250 g + Miso-Dashi 1–2 TL", calories: 220 },
+{ time: "18:30", title: "Leicht & warm",
+  description: "Buchweizen (gekocht) 60 g + Gemüse 250 g + Miso-Dashi 1–2 TL",
+  calories: 220
+},
 
-      { time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
-      { time: "20:30", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 },
+// ===============================
+// 🌙 SPÄT – Mineralstoffe
+// ===============================
+{ time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
 
-      { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
-    ];
+{ time: "20:30", title: "Optional (wenn Hunger)",
+  description: "Magerquark 100 g",
+  calories: 70
+},
+
+{ time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
+
 
     // ===== Offset-Logik: Standard nur morgens bis 12:00, optional ganzer Tag =====
     const PLAN_START = "06:15";
@@ -711,7 +763,10 @@
     function testNotification() {
       if (Notification.permission === "granted") {
         if (soundEnabled) playSound();
-        new Notification("🍽️ Test-Benachrichtigung", { body: "Die Benachrichtigungen funktionieren!", icon: "🔔" });
+        new Notification("🍽️ Test-Benachrichtigung", {
+          body: "Die Benachrichtigungen funktionieren!",
+          icon: "🔔"
+        });
       } else if (Notification.permission === "denied") {
         alert("Benachrichtigungen wurden blockiert. Bitte aktiviere sie in den Browser-Einstellungen.");
       } else {
@@ -773,12 +828,11 @@
         document.getElementById("notificationAlert").classList.add("show");
       }
 
-      // WICHTIG: Timeline nur updaten, wenn NICHT gescrollt wird
       setInterval(() => {
         updateTime();
+        updateTimeline();
         updateNextItem();
         checkForNotifications();
-        if (!isScrolling) updateTimeline();
       }, 10000);
     }
 
