@@ -175,17 +175,27 @@
         </button>
       </div>
 
+      <!-- Offset-Panel: Standard nur morgens bis 12:00, optional ganzer Tag -->
       <div class="offset-panel">
         <h3>⏱️ Verschlafen-Modus (Zeitversatz)</h3>
+
         <div class="offset-row">
           <label for="anchorTime">Ich bin aufgestanden um</label>
           <input type="time" id="anchorTime" />
           <button class="btn btn-primary" onclick="applyOffsetFromAnchor()">Offset setzen</button>
           <button class="btn btn-secondary" onclick="resetOffset()">Offset zurücksetzen</button>
         </div>
+
+        <div class="offset-row" style="margin-top:10px;">
+          <input type="checkbox" id="applyAllDay" onchange="toggleApplyAllDay()" />
+          <label for="applyAllDay" style="cursor:pointer;">
+            Offset auf <strong>alle</strong> Zeiten anwenden (sonst nur morgens bis 12:00)
+          </label>
+        </div>
+
         <div class="hint">
-          Logik: <code>06:15</code> ist dein Plan-Start. Wenn du z.B. um <code>07:15</code> startest,
-          verschiebt sich alles um <code>+60</code> Minuten. Läuft über Mitternacht korrekt mit.
+          Standard: Offset wirkt nur auf Zeiten <code>vor 12:00</code> (ab Mittag bleibt der Grundplan).
+          Optional kannst du den Haken setzen, dann gilt der Offset für den ganzen Tag.
           Speichert automatisch im Browser (localStorage).
         </div>
       </div>
@@ -238,12 +248,17 @@
       { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
     ];
 
-    // ===== Zeitversatz-Logik =====
+    // ===== Offset-Logik (NEU): Standard nur morgens bis 12:00, optional ganzer Tag =====
     const PLAN_START = "06:15";
     const OFFSET_KEY = "scheduleOffsetMin";
     const ANCHOR_KEY = "scheduleAnchorTime";
 
+    const APPLY_ALL_KEY = "scheduleOffsetApplyAllDay";
+    const MORNING_CUTOFF = "12:00"; // ab dieser Uhrzeit: Standard = kein Offset
+
     let offsetMinutes = 0;
+    let applyAllDay = false;
+
     let lastNotifiedIndex = -1;
     let soundEnabled = true;
 
@@ -264,18 +279,35 @@
       return now.getHours() * 60 + now.getMinutes();
     }
 
+    function getPerItemOffset(item) {
+      if (applyAllDay) return offsetMinutes;
+
+      const baseMin = getTimeInMinutes(item.time);
+      const cutoffMin = getTimeInMinutes(MORNING_CUTOFF);
+
+      // nur vor 12:00 verschieben
+      return baseMin < cutoffMin ? offsetMinutes : 0;
+    }
+
     function getEffectiveItemMinutes(item) {
-      return ((getTimeInMinutes(item.time) + offsetMinutes) % 1440 + 1440) % 1440;
+      const perOffset = getPerItemOffset(item);
+      return ((getTimeInMinutes(item.time) + perOffset) % 1440 + 1440) % 1440;
     }
 
     function getEffectiveItemTimeStr(item) {
-      return minutesToHHMM(getTimeInMinutes(item.time) + offsetMinutes);
+      const perOffset = getPerItemOffset(item);
+      return minutesToHHMM(getTimeInMinutes(item.time) + perOffset);
     }
 
     function saveOffset(mins, anchorTimeStr) {
       offsetMinutes = mins;
       localStorage.setItem(OFFSET_KEY, String(mins));
       if (anchorTimeStr) localStorage.setItem(ANCHOR_KEY, anchorTimeStr);
+    }
+
+    function saveApplyAllDay(value) {
+      applyAllDay = !!value;
+      localStorage.setItem(APPLY_ALL_KEY, applyAllDay ? "true" : "false");
     }
 
     function loadOffset() {
@@ -285,6 +317,20 @@
       const anchor = localStorage.getItem(ANCHOR_KEY);
       const anchorInput = document.getElementById("anchorTime");
       if (anchor && anchorInput) anchorInput.value = anchor;
+
+      const savedApplyAll = localStorage.getItem(APPLY_ALL_KEY);
+      applyAllDay = savedApplyAll === "true";
+      const applyAllEl = document.getElementById("applyAllDay");
+      if (applyAllEl) applyAllEl.checked = applyAllDay;
+    }
+
+    function toggleApplyAllDay() {
+      const el = document.getElementById("applyAllDay");
+      saveApplyAllDay(el && el.checked);
+
+      lastNotifiedIndex = -1;
+      updateTimeline();
+      updateNextItem();
     }
 
     function applyOffsetFromAnchor() {
@@ -298,7 +344,6 @@
       saveOffset(mins, anchorInput.value);
 
       lastNotifiedIndex = -1;
-
       updateTimeline();
       updateNextItem();
     }
@@ -306,15 +351,16 @@
     function resetOffset() {
       saveOffset(0, "");
       localStorage.removeItem(ANCHOR_KEY);
+
       const anchorInput = document.getElementById("anchorTime");
       if (anchorInput) anchorInput.value = "";
-      lastNotifiedIndex = -1;
 
+      lastNotifiedIndex = -1;
       updateTimeline();
       updateNextItem();
     }
 
-    // ===== Anzeige-Logik =====
+    // ===== Bestehende Anzeige-Logik =====
 
     function updateTime() {
       const now = new Date();
