@@ -360,6 +360,18 @@
         <button class="btn btn-secondary" onclick="scrollToNext()">⬇️ Zum nächsten Punkt</button>
       </div>
 
+	<!-- NEU: Tages-Schalter -->
+	<div class="controls" style="margin-top:10px;">
+	  <button class="btn btn-secondary" onclick="setDay('mon')">Mo</button>
+	  <button class="btn btn-secondary" onclick="setDay('tue')">Di</button>
+	  <button class="btn btn-secondary" onclick="setDay('wed')">Mi</button>
+	  <button class="btn btn-secondary" onclick="setDay('thu')">Do</button>
+	  <button class="btn btn-secondary" onclick="setDay('fri')">Fr</button>
+	  <button class="btn btn-secondary" onclick="setDay('sat')">Sa</button>
+	  <button class="btn btn-secondary" onclick="setDay('sun')">So</button>
+	  <button class="btn btn-primary" onclick="setDay('auto')">Auto</button>
+	</div>
+
       <div id="nextItem"></div>
 
       <h3 style="margin-bottom:18px;color:#111827;">📋 Tagesübersicht</h3>
@@ -750,19 +762,39 @@
         if (!isScrolling) updateTimeline();
       }, 10000);
     }
+	const DAY_OVERRIDE_KEY = "dayOverride"; // "mon"..."sun" oder "" für auto
+
+function setDay(key) {
+  // key: "mon".."sun" oder "auto"
+  if (key === "auto") {
+    localStorage.removeItem(DAY_OVERRIDE_KEY);
+  } else {
+    localStorage.setItem(DAY_OVERRIDE_KEY, key);
+  }
+  // Seite neu laden, damit der passende Plan geladen wird
+  location.reload();
+}
+
 function getPlanFileForToday() {
-  // JS: getDay() => 0=So, 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr, 6=Sa
   const dayMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const todayKey = dayMap[new Date().getDay()];
 
-  // Optional: Override per URL, z.B. ?day=mon
+  // 1) URL-Override ?day=mon (höchste Priorität)
   const params = new URLSearchParams(window.location.search);
-  const override = (params.get("day") || "").toLowerCase();
+  const urlOverride = (params.get("day") || "").toLowerCase();
+
+  // 2) Schalter-Override aus localStorage (mittlere Priorität)
+  const savedOverride = (localStorage.getItem("dayOverride") || "").toLowerCase();
+
   const allowed = new Set(dayMap);
-  const key = allowed.has(override) ? override : todayKey;
+  const key =
+    allowed.has(urlOverride) ? urlOverride :
+    allowed.has(savedOverride) ? savedOverride :
+    todayKey;
 
   return `plans/${key}.js`;
 }
+
 
 function loadScheduleScript(src) {
   return new Promise((resolve, reject) => {
