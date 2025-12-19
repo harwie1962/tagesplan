@@ -368,6 +368,8 @@
   </div>
 
   <script>
+  let schedule = []; // wird durch Tagesdatei gefüllt
+
     // ===== NEU: Scroll-Detektor (damit Timeline beim Scrollen nicht dauernd neu gerendert wird) =====
     let isScrolling = false;
     let scrollTimer = null;
@@ -377,79 +379,9 @@
       scrollTimer = setTimeout(() => { isScrolling = false; }, 180);
     }, { passive: true });
 
-// ===============================
-// 🌅 MORGEN – Medikamente & Start
-// ===============================
-const schedule = [
-  { time: "06:15", title: "Prednisolon", description: "", calories: 0 },
+    let schedule = []; // wird durch Tagesdatei gefüllt
 
-  { time: "06:30", title: "Vitamin-B-Komplex", description: "", calories: 0 },
-  { time: "06:40", title: "Magnesium-Malat", description: "", calories: 0 },
-  { time: "06:45", title: "L-Glutamin", description: "5 g (mit Wasser)", calories: 0 },
-
-  { time: "07:00", title: "Medikamente + Supplemente (morgens)",
-    description: "Eliquis/Apixaban 5 mg + Finerenon 10 mg + Vitamin D3/K2 + Omega-3 + Q10",
-    calories: 0
-  },
-
-  { time: "07:00", title: "Frühstück",
-    description: "Haferflocken 50 g, Magerquark 150 g, Beeren 80 g, Leinöl 1 EL, Flohsamen 1 TL",
-    calories: 350
-  },
-
-  { time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
-
-  { time: "09:00", title: "Herz / Niere",
-    description: "Bisoprolol, Amlodipin, Ezetimib",
-    calories: 0
-  },
-
-  { time: "09:30", title: "Eiweißblock (klein)",
-    description: "1 Ei (gekocht) + Magerquark 100 g",
-    calories: 150
-  },
-
-  { time: "12:30", title: "Hauptmahlzeit (gekocht, ggf. abgekühlt)",
-    description: "Kartoffeln 250 g, Gemüse 300 g, Hähnchenbrust 120 g, Olivenöl 1 TL",
-    calories: 420
-  },
-
-  { time: "13:00", title: "Artischocke",
-    description: "Leber / Galle",
-    calories: 0
-  },
-
-  { time: "15:30", title: "Kleine Kohlenhydratportion",
-    description: "Haferflocken 30 g + Wasser oder Tee",
-    calories: 115
-  },
-
-  { time: "17:30", title: "L-Glutamin (2. Portion)",
-    description: "3–5 g",
-    calories: 0
-  },
-
-  { time: "18:00", title: "Abendmedikamente",
-    description: "Eliquis/Apixaban 5 mg + Rosuvastatin + Ramipril",
-    calories: 0
-  },
-
-  { time: "18:30", title: "Leicht & warm",
-    description: "Buchweizen (gekocht) 60 g + Gemüse 250 g + Miso-Dashi 1–2 TL",
-    calories: 220
-  },
-
-  { time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
-
-  { time: "20:30", title: "Optional (wenn Hunger)",
-    description: "Magerquark 100 g",
-    calories: 70
-  },
-
-  { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
-	];
-
-
+   
     // ===== Offset-Logik: Standard nur morgens bis 12:00, optional ganzer Tag =====
     const PLAN_START = "06:15";
     const OFFSET_KEY = "scheduleOffsetMin";
@@ -820,8 +752,63 @@ const schedule = [
         if (!isScrolling) updateTimeline();
       }, 10000);
     }
+function getPlanFileForToday() {
+  // JS: getDay() => 0=So, 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr, 6=Sa
+  const dayMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const todayKey = dayMap[new Date().getDay()];
+
+  // Optional: Override per URL, z.B. ?day=mon
+  const params = new URLSearchParams(window.location.search);
+  const override = (params.get("day") || "").toLowerCase();
+  const allowed = new Set(dayMap);
+  const key = allowed.has(override) ? override : todayKey;
+
+  return `plans/${key}.js`;
+}
+
+function loadScheduleScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("Konnte Plan-Datei nicht laden: " + src));
+    document.head.appendChild(s);
+  });
+}
+
+(async function start() {
+  try {
+    const file = getPlanFileForToday();
+    await loadScheduleScript(file);
+
+    // Erwartung: die Plan-Datei setzt "const schedule = [...]"
+    // -> wir übernehmen sie in unsere globale Variable
+    if (typeof window.schedule !== "undefined") {
+      schedule = window.schedule;
+    } else if (typeof schedule !== "undefined" && Array.isArray(schedule) && schedule.length) {
+      // falls Browser es direkt im gleichen Scope hat: ok
+    } else {
+      // Häufigster Fall: const schedule ist NICHT global sichtbar.
+      // Deshalb: in Plan-Dateien bitte "window.schedule = [...]" nutzen (siehe Hinweis unten).
+      console.warn("schedule nicht gefunden. Bitte Plan-Datei anpassen auf: window.schedule = [...]");
+    }
 
     init();
+  } catch (e) {
+    console.error(e);
+    document.getElementById("status").textContent = "Plan-Datei fehlt/Fehler";
+    const nextItemDiv = document.getElementById("nextItem");
+    if (nextItemDiv) {
+      nextItemDiv.innerHTML = `
+        <div class="next-item">
+          <h2>⚠️ Plan konnte nicht geladen werden</h2>
+          <div class="description">${e.message}</div>
+        </div>
+      `;
+    }
+  }
+})();
+
   </script>
 </body>
 </html>
