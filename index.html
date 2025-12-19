@@ -135,7 +135,7 @@
     }
     .notification-permission.show{ display:block; }
 
-    /* NEU: Offset-Panel */
+    /* Offset-Panel */
     .offset-panel{
       background:#f1f3f5;
       border:2px dashed rgba(0,0,0,.15);
@@ -176,7 +176,6 @@
         </button>
       </div>
 
-      <!-- NEU: "Verschlafen"-Offset -->
       <div class="offset-panel">
         <h3>⏱️ Verschlafen-Modus (Zeitversatz)</h3>
         <div class="offset-row">
@@ -206,33 +205,31 @@
   </div>
 
   <script>
-    // Originalplan (unverändert)
+    // NEUER PLAN (Morgen) – integriert
+    // Hinweis: Medikamente sind hier NICHT aufgeführt (wie in deinem neuen Plan).
+    // Wenn du sie zusätzlich drin haben willst, sag "mit Medikamenten" – dann baue ich sie wieder ein.
     const schedule = [
-      { time: "06:15", title: "Prednisolon", description: "", calories: 0 },
-      { time: "06:30", title: "Vitamin-B-Komplex", description: "", calories: 0 },
-      { time: "06:40", title: "Magnesium-Malat", description: "", calories: 0 },
-      { time: "06:45", title: "L-Glutamin", description: "5 g", calories: 0 },
-      { time: "07:00", title: "Medikamente", description: "Eliquis/Apixaban 5 mg + Vitamin D3/K2 + Omega-3 + Q10 + Finerenon 10 mg", calories: 0 },
-      { time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
-      { time: "08:00", title: "Frühstück (leicht)", description: "40 g Hafer, 150 g Magerquark, 1 TL Flohsamen, 1 TL Haferkleie, 1 EL Leinöl, 80-100 g Beeren", calories: 340 },
-      { time: "09:00", title: "Herz/Niere", description: "Bisoprolol, Amlodipin, Ezetimib", calories: 0 },
-      { time: "09:30", title: "Eiweißblock (klein)", description: "250 g Magerquark, 1 Ei", calories: 250 },
-      { time: "12:30", title: "Mittagessen", description: "300-350 g Gemüse, 1 EL Leinöl, 2 Eier", calories: 370 },
-      { time: "13:00", title: "Artischocke", description: "", calories: 0 },
-      { time: "15:30", title: "Haferportion", description: "30 g Hafer, Optional: Flohsamen", calories: 117 },
-      { time: "17:30", title: "L-Glutamin zweite Portion", description: "3-5 g", calories: 0 },
-      { time: "18:00", title: "Abendmedikamente", description: "Eliquis/Apixaban 5 mg + Artischocke 2 + Rosuvastatin + Ramipril", calories: 0 },
-      { time: "18:00", title: "Abendessen", description: "Wähle eine Option: A) Hüttenkäse + Gemüse, B) Eier + Salat, C) Magerquark + Gemüse, D) Hähnchen/Fisch + Gemüse, E) Gemüsesuppe + Quark", calories: 290 },
-      { time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
-      { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
+      { time: "06:30", title: "Start", description: "Wasser 300 ml + L-Glutamin 5 g", calories: 0 },
+
+      { time: "07:00", title: "Frühstück (sanft, sättigend)", description: "Haferflocken 50 g, Magerquark 150 g, Beeren 80 g, Leinöl 1 EL, Flohsamen 1 TL", calories: 350 },
+
+      { time: "09:30", title: "Eiweißblock (klein)", description: "1 Ei (gekocht) + Magerquark 100 g", calories: 150 },
+
+      { time: "12:30", title: "Hauptmahlzeit (gekocht, ggf. abgekühlt)", description: "Kartoffeln 250 g, Gemüse 300 g (z.B. Brokkoli/Karotten/Bohnen), Hähnchenbrust 120 g, Olivenöl 1 TL", calories: 420 },
+
+      { time: "15:30", title: "Kleine Kohlenhydratportion", description: "Haferflocken 30 g + Wasser oder Tee", calories: 115 },
+
+      { time: "18:30", title: "Leicht & warm", description: "Buchweizen (gekocht) 60 g + Gemüse 250 g + Miso-Dashi 1–2 TL", calories: 220 },
+
+      { time: "20:30", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 }
     ];
 
-    // ===== NEU: Zeitversatz-Logik =====
-    const PLAN_START = "06:15";           // Anker im Originalplan
+    // ===== Zeitversatz-Logik =====
+    const PLAN_START = "06:30";           // Anker im neuen Plan
     const OFFSET_KEY = "scheduleOffsetMin";
     const ANCHOR_KEY = "scheduleAnchorTime";
 
-    let offsetMinutes = 0;               // wird aus localStorage geladen
+    let offsetMinutes = 0;
     let lastNotifiedIndex = -1;
     let soundEnabled = true;
 
@@ -242,7 +239,6 @@
     }
 
     function minutesToHHMM(totalMinutes) {
-      // robust gegen negative und > 24h
       const mod = ((totalMinutes % 1440) + 1440) % 1440;
       const h = String(Math.floor(mod / 60)).padStart(2, "0");
       const m = String(mod % 60).padStart(2, "0");
@@ -255,7 +251,6 @@
     }
 
     function getEffectiveItemMinutes(item) {
-      // Originalzeit + offset, moduliert auf 24h
       return ((getTimeInMinutes(item.time) + offsetMinutes) % 1440 + 1440) % 1440;
     }
 
@@ -282,14 +277,12 @@
       const anchorInput = document.getElementById("anchorTime");
       if (!anchorInput || !anchorInput.value) return;
 
-      const actualStart = getTimeInMinutes(anchorInput.value);  // z.B. 07:15
-      const planStart = getTimeInMinutes(PLAN_START);          // 06:15
+      const actualStart = getTimeInMinutes(anchorInput.value);
+      const planStart = getTimeInMinutes(PLAN_START);
 
-      // einfacher Versatz in Minuten
       const mins = actualStart - planStart;
       saveOffset(mins, anchorInput.value);
 
-      // damit du sofort wieder Erinnerungen bekommst, falls du den Offset stark änderst:
       lastNotifiedIndex = -1;
 
       updateTimeline();
@@ -307,7 +300,7 @@
       updateNextItem();
     }
 
-    // ===== Bestehende Anzeige-Logik, angepasst auf effektive Zeiten =====
+    // ===== Anzeige-Logik =====
 
     function updateTime() {
       const now = new Date();
@@ -315,9 +308,6 @@
     }
 
     function findCurrentAndNext() {
-      // Wir bestimmen "heute" anhand aktueller Minuten im Tag.
-      // Da der Plan durch Offset ggf. über Mitternacht läuft, sortieren wir die Einträge
-      // nach effektiver Zeit und suchen darin.
       const currentMinutes = getCurrentMinutes();
 
       const indexed = schedule.map((item, index) => ({
@@ -325,22 +315,17 @@
         eff: getEffectiveItemMinutes(item)
       }));
 
-      // sortiert nach effektiver Uhrzeit
       indexed.sort((a, b) => a.eff - b.eff);
 
-      // finde nächstes (>= jetzt). current ist davor.
       let next = indexed.find(x => x.eff > currentMinutes);
       let nextIndex = next ? next.index : -1;
 
-      // currentIndex = letztes Element <= jetzt (in sortierter Liste)
       let currentSortedPos = -1;
       for (let i = 0; i < indexed.length; i++) {
         if (indexed[i].eff <= currentMinutes) currentSortedPos = i;
       }
       let currentIndex = currentSortedPos >= 0 ? indexed[currentSortedPos].index : -1;
 
-      // Wenn nichts mehr kommt (nextIndex=-1): Tagesplan abgeschlossen
-      // (Du kannst das optional auch als "morgen früh" interpretieren, hier bleibt es wie gehabt.)
       return { currentIndex, nextIndex, sorted: indexed };
     }
 
@@ -350,14 +335,11 @@
 
       timeline.innerHTML = "";
 
-      // Timeline in effektiver Zeitreihenfolge anzeigen (das ist im Verschlafen-Modus am logischsten)
       sorted.forEach(({ item, index }) => {
         const div = document.createElement("div");
         div.className = "timeline-item";
         div.id = `item-${index}`;
 
-        // Completed/Current: Vergleich anhand "Position" in sortierter Liste
-        // Dazu ermitteln wir erneut die Positionen in sorted:
         const currentPos = sorted.findIndex(x => x.index === currentIndex);
         const thisPos = sorted.findIndex(x => x.index === index);
 
@@ -399,8 +381,6 @@
       const currentMinutes = getCurrentMinutes();
       const nextMinutes = getEffectiveItemMinutes(nextItem);
 
-      // Minuten bis zum nächsten Punkt (innerhalb des Tages; wenn "nextMinutes" schon vorbei wäre,
-      // wäre es nicht "next", daher ist es hier >= 0)
       let minutesUntil = nextMinutes - currentMinutes;
       if (minutesUntil < 0) minutesUntil += 1440;
 
@@ -440,17 +420,16 @@
       const nextMinutes = getEffectiveItemMinutes(nextItem);
 
       let minutesUntil = nextMinutes - currentMinutes;
-      if (minutesUntil < -720) minutesUntil += 1440;   // Schutz, falls irgendwas "über Mitternacht" kippt
+      if (minutesUntil < -720) minutesUntil += 1440;
       if (minutesUntil < 0) minutesUntil += 1440;
 
-      // Benachrichtigung wenn Zeit erreicht ist (innerhalb von 2 Minuten Toleranz)
       if (minutesUntil <= 0 || minutesUntil <= 2) {
         sendNotification(nextItem);
         lastNotifiedIndex = nextIndex;
       }
     }
 
-    // ===== Sound/Notification/Theme unverändert =====
+    // ===== Sound/Notification/Theme =====
 
     function playSound() {
       try {
