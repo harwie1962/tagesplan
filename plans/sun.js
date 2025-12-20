@@ -10,7 +10,7 @@ window.schedule = [
   { time: "08:00", title: "Frühstück (ruhig)", description: "Haferflocken 50 g, Magerquark 150 g, Beeren 80 g, Leinöl 1 EL, Flohsamen 1 TL", calories: 350 },
   { time: "09:00", title: "Herz / Niere", description: "Bisoprolol, Amlodipin, Ezetimib", calories: 0 },
   { time: "09:30", title: "Eiweißblock (klein)", description: "1 Ei (gekocht)", calories: 80 },
-
+ 
   { time: "12:30", title: "Hauptmahlzeit (gekocht, ggf. abgekühlt)", description: "Kartoffeln 250 g, Gemüse 300 g (Brokkoli/Bohnen), Hähnchenbrust 120 g, Olivenöl 1 TL", calories: 420 },
   { time: "13:00", title: "Artischocke", description: "Leber / Galle", calories: 0 },
 
