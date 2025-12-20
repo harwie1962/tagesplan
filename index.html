@@ -390,8 +390,6 @@
   <script>
     // =========================================================
     // 1) Plan-Laden (GitHub Pages): plans/mon.js ... plans/sun.js
-    //    Jede Plan-Datei MUSS so aussehen:
-    //      window.schedule = [ {time:"06:15", title:"...", description:"", calories:0}, ... ];
     // =========================================================
 
     // Globale Plan-Liste (wird durch Plan-Datei gefüllt)
@@ -401,12 +399,15 @@
     const DAY_MAP = ["sun","mon","tue","wed","thu","fri","sat"];
     const DAY_OVERRIDE_KEY = "scheduleDayOverride"; // "auto" oder "mon".."sun"
 
+    // Auto-Reset Timer: nach 1 Minute zurück auf AUTO
+    let manualResetTimer = null;
+
     function getTodayKey(){
       return DAY_MAP[new Date().getDay()];
     }
 
     function getSelectedDayKey(){
-      // 1) URL override: ?day=mon (WICHTIG: nur 1 Fragezeichen!)
+      // 1) URL override: ?day=mon
       const params = new URLSearchParams(window.location.search);
       const q = (params.get("day") || "").toLowerCase();
       if (DAY_MAP.includes(q)) return q;
@@ -479,11 +480,31 @@
       btns.forEach(btn => {
         btn.addEventListener("click", async () => {
           const key = btn.getAttribute("data-day");
+
+          // alten Timer stoppen
+          if (manualResetTimer) {
+            clearTimeout(manualResetTimer);
+            manualResetTimer = null;
+          }
+
+          // Tag setzen
           if (key === "auto"){
             localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
           } else {
             localStorage.setItem(DAY_OVERRIDE_KEY, key);
+
+            // nach 60 Sekunden automatisch zurück auf AUTO
+            manualResetTimer = setTimeout(async () => {
+              localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
+              setActiveButtons();
+              try{
+                await loadPlanForCurrentSelection();
+              } catch(e){
+                showPlanError(e);
+              }
+            }, 60000);
           }
+
           setActiveButtons();
 
           // neu laden + neu rendern
@@ -550,10 +571,6 @@
       return now.getHours()*60 + now.getMinutes();
     }
 
-    // WICHTIG: Genau hier passiert die Magie:
-    // - morgens: offsetMinutes
-    // - ab 12:00: afternoonOffsetMinutes
-    // - applyAllDay: offsetMinutes gilt zusätzlich für ALLE Zeiten
     function getPerItemOffset(item){
       const baseMin = getTimeInMinutes(item.time);
       const cutoffMin = getTimeInMinutes(MORNING_CUTOFF);
@@ -820,7 +837,6 @@
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === "suspended") audioContext.resume();
 
-        // Lautstärke: 0.05 leise ... 0.30 mittel ... 0.60 laut
         const VOLUME = 0.35;
 
         const osc1 = audioContext.createOscillator();
@@ -972,8 +988,6 @@
 
     start();
   </script>
+
 </body>
 </html>
-
-
-
