@@ -11,7 +11,9 @@ window.schedule = [
   { time: "09:00", title: "Herz / Niere", description: "Bisoprolol, Amlodipin, Ezetimib", calories: 0 },
   { time: "09:30", title: "Eiweißblock (klein)", description: "Magerquark 150 g", calories: 120 },
 
-  { time: "12:30", title: "Hauptmahlzeit (gekocht, ggf. abgekühlt)", description: "Linsen-Bowl: Linsen 1 Portion, Gemüse 300 g, Olivenöl 1 TL (optional Hähnchen 80–100 g)", calories: 420 },
+  { time: "12:30", title: "Mittagessen: Hamburger (Linsen-Bun)", description: "Linsen-Hamburgerbrötchen (60 g Linsen), Rinder-Patty 125 g (~15 % Fett),
+    Salat (Blatt/Tomate/Gurke), Ketchup 20 g", calories: 507
+  },
   { time: "13:00", title: "Artischocke", description: "Leber / Galle", calories: 0 },
 
   { time: "15:30", title: "Kleine Kohlenhydratportion", description: "Haferflocken 30 g + Wasser oder Tee", calories: 115 },
