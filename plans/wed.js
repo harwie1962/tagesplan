@@ -6,9 +6,9 @@ window.schedule = [
   { time: "06:45", title: "L-Glutamin", description: "5 g (mit Wasser)", calories: 0 },
 
   { time: "07:00", title: "Medikamente + Supplemente (morgens)", description: "Eliquis/Apixaban 5 mg + Finerenon 10 mg + Vitamin D3/K2 + Omega-3 + Q10", calories: 0 },
-  { time: "07:00", title: "Frühstück (Overnight-Oats)", description: "Haferflocken 50 g (über Nacht), Magerquark 150 g, Beeren 80 g, Leinöl 1 EL, Flohsamen 1 TL", calories: 350 },
+  
   { time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
-
+  { time: "08:00", title: "Frühstück (Overnight-Oats)", description: "Haferflocken 50 g (über Nacht), Magerquark 150 g, Beeren 80 g, Leinöl 1 EL, Flohsamen 1 TL", calories: 350 },
   { time: "09:00", title: "Herz / Niere", description: "Bisoprolol, Amlodipin, Ezetimib", calories: 0 },
   { time: "09:30", title: "Eiweißblock (klein)", description: "1 Ei (gekocht) + Gemüse roh (z.B. Gurke/Paprika) optional", calories: 80 },
 
