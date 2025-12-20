@@ -972,25 +972,8 @@
 
     start();
   </script>
-  <script>
-let manualResetTimer = null;
-
-function switchToManual(day) {
-  currentMode = "manual";
-  loadDay(day);
-
-  if (manualResetTimer) {
-    clearTimeout(manualResetTimer);
-  }
-
-  manualResetTimer = setTimeout(() => {
-    currentMode = "auto";
-    loadToday();
-  }, 6000);
-}
-</script>
-
 </body>
 </html>
+
 
 
