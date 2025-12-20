@@ -257,7 +257,6 @@
     .hint{ margin-top:10px; font-size:12.5px; color:#374151; line-height:1.45; }
     .hint code{ background:rgba(0,0,0,.06); padding:2px 6px; border-radius:8px; }
 
-    /* Tages-Schalter */
     .day-switch{
       display:flex;
       gap:8px;
@@ -339,7 +338,6 @@
         </button>
       </div>
 
-      <!-- Offset Panel -->
       <div class="panel">
         <h3>⏱️ Verschlafen-Modus (Zeitversatz)</h3>
 
@@ -392,15 +390,11 @@
     // 1) Plan-Laden (GitHub Pages): plans/mon.js ... plans/sun.js
     // =========================================================
 
-    // Globale Plan-Liste (wird durch Plan-Datei gefüllt)
     let schedule = [];
 
-    // Tages-Auswahl (Auto oder manuell)
     const DAY_MAP = ["sun","mon","tue","wed","thu","fri","sat"];
     const DAY_OVERRIDE_KEY = "scheduleDayOverride"; // "auto" oder "mon".."sun"
     const MANUAL_UNTIL_KEY = "scheduleManualUntilTs";
-
-
 
     function getTodayKey(){
       return DAY_MAP[new Date().getDay()];
@@ -426,13 +420,12 @@
 
     function loadScheduleScript(src){
       return new Promise((resolve, reject) => {
-        // vorhandenes plan-script entfernen (neu laden)
         const old = document.getElementById("planScript");
         if (old) old.remove();
 
         const s = document.createElement("script");
         s.id = "planScript";
-        s.src = src + "?v=" + Date.now(); // Cache-Buster
+        s.src = src + "?v=" + Date.now();
         s.onload = () => resolve();
         s.onerror = () => reject(new Error("Konnte Plan-Datei nicht laden: " + src));
         document.head.appendChild(s);
@@ -443,7 +436,6 @@
       const dayKey = getSelectedDayKey();
       const file = getPlanFileForDay(dayKey);
 
-      // Plan-Datei lädt und setzt window.schedule
       await loadScheduleScript(file);
 
       if (Array.isArray(window.schedule) && window.schedule.length){
@@ -460,56 +452,44 @@
     function setStatusPlanInfo(){
       const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
       const effective = getSelectedDayKey();
-      const label =
-        (saved === "auto" ? `AUTO (${effective.toUpperCase()})` : saved.toUpperCase());
-      document.getElementById("status").textContent = `Plan: ${label}`;
+      const label = (saved === "auto" ? `AUTO (${effective.toUpperCase()})` : saved.toUpperCase());
+      const status = document.getElementById("status");
+      if (status) status.textContent = `Plan: ${label}`;
     }
 
+    // --- Day Switch (neu, sauber, robust) ---
     function initDaySwitch(){
-  const wrap = document.getElementById("daySwitch");
-  const btns = wrap.querySelectorAll(".day-btn");
+      const wrap = document.getElementById("daySwitch");
+      if (!wrap) return;
 
-  function setActiveButtons(){
-    const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
-    btns.forEach(b => b.classList.remove("active"));
-    const activeKey = saved === "auto" ? "auto" : saved;
-    const el = wrap.querySelector(`.day-btn[data-day="${activeKey}"]`);
-    if (el) el.classList.add("active");
-  }
+      const btns = Array.from(wrap.querySelectorAll(".day-btn"));
 
-  btns.forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const key = btn.getAttribute("data-day");
+      const setActiveButtons = () => {
+        const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
+        btns.forEach(b => b.classList.remove("active"));
+        const activeKey = saved === "auto" ? "auto" : saved;
+        const el = wrap.querySelector(`.day-btn[data-day="${activeKey}"]`);
+        if (el) el.classList.add("active");
+      };
 
-      // Tag setzen + 1-Minuten-Reset-Merker
-      if (key === "auto"){
-        localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
-        localStorage.removeItem(MANUAL_UNTIL_KEY);
-      } else {
-        localStorage.setItem(DAY_OVERRIDE_KEY, key);
-        localStorage.setItem(MANUAL_UNTIL_KEY, String(Date.now() + 60000)); // 1 Minute
-      }
+      // Listener nur einmal binden (Marker am Element)
+      btns.forEach(btn => {
+        if (btn.dataset.bound === "1") return;
+        btn.dataset.bound = "1";
 
-      setActiveButtons();
+        btn.addEventListener("click", async () => {
+          const key = (btn.getAttribute("data-day") || "auto").toLowerCase();
 
-      // neu laden + neu rendern
-      try{
-        await loadPlanForCurrentSelection();
-      } catch(e){
-        showPlanError(e);
-      }
-    });
-  });
+          if (key === "auto"){
+            localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
+            localStorage.removeItem(MANUAL_UNTIL_KEY);
+          } else {
+            localStorage.setItem(DAY_OVERRIDE_KEY, key);
+            localStorage.setItem(MANUAL_UNTIL_KEY, String(Date.now() + 60000)); // 1 Minute
+          }
 
-  // initial highlight
-  setActiveButtons();
-}
+          setActiveButtons();
 
-
-      
-
-
-          // neu laden + neu rendern
           try{
             await loadPlanForCurrentSelection();
           } catch(e){
@@ -518,22 +498,24 @@
         });
       });
 
-      // initial highlight
       setActiveButtons();
     }
 
     function showPlanError(e){
       console.error(e);
-      document.getElementById("status").textContent = "Plan-Datei fehlt/Fehler";
+      const status = document.getElementById("status");
+      if (status) status.textContent = "Plan-Datei fehlt/Fehler";
+
       const nextItemDiv = document.getElementById("nextItem");
       if (nextItemDiv){
         nextItemDiv.innerHTML = `
           <div class="next-item">
             <h2>⚠️ Plan konnte nicht geladen werden</h2>
-            <div class="description">${String(e.message || e)}</div>
+            <div class="description">${String(e && (e.message || e) || "Unbekannter Fehler")}</div>
           </div>
         `;
       }
+
       const timeline = document.getElementById("timeline");
       if (timeline) timeline.innerHTML = "";
     }
@@ -549,6 +531,7 @@
     const APPLY_ALL_KEY = "scheduleOffsetApplyAllDay";
 
     const AFTERNOON_KEY = "scheduleAfternoonOffsetMin"; // ab 12:00
+
     let offsetMinutes = 0;
     let afternoonOffsetMinutes = 0;
     let applyAllDay = false;
@@ -700,7 +683,8 @@
     // =========================================================
     function updateTime(){
       const now = new Date();
-      document.getElementById("currentTime").textContent = now.toLocaleTimeString("de-DE");
+      const el = document.getElementById("currentTime");
+      if (el) el.textContent = now.toLocaleTimeString("de-DE");
     }
 
     function findCurrentAndNext(){
@@ -814,6 +798,7 @@
     // 4) Notifications / Sound / Theme / Scroll
     // =========================================================
     function checkForNotifications(){
+      if (!("Notification" in window)) return;
       if (Notification.permission !== "granted") return;
       if (!Array.isArray(schedule) || !schedule.length) return;
 
@@ -828,7 +813,7 @@
       if (minutesUntil < -720) minutesUntil += 1440;
       if (minutesUntil < 0) minutesUntil += 1440;
 
-      if (minutesUntil <= 0 || minutesUntil <= 2){
+      if (minutesUntil <= 2){
         sendNotification(nextItem);
         lastNotifiedIndex = nextIndex;
       }
@@ -886,20 +871,22 @@
     }
 
     function requestNotificationPermission(){
+      if (!("Notification" in window)) return;
       Notification.requestPermission().then(permission => {
         if (permission === "granted"){
-          document.getElementById("notificationAlert").classList.remove("show");
+          const a = document.getElementById("notificationAlert");
+          if (a) a.classList.remove("show");
           alert("✅ Benachrichtigungen aktiviert!");
         }
       });
     }
 
     function testNotification(){
+      if (!("Notification" in window)) return;
+
       if (Notification.permission === "granted"){
         if (soundEnabled) playSound();
-        new Notification("🍽️ Test-Benachrichtigung", {
-          body: "Die Benachrichtigungen funktionieren!"
-        });
+        new Notification("🍽️ Test-Benachrichtigung", { body: "Die Benachrichtigungen funktionieren!" });
       } else if (Notification.permission === "denied"){
         alert("Benachrichtigungen wurden blockiert. Bitte aktiviere sie in den Browser-Einstellungen.");
       } else {
@@ -908,10 +895,13 @@
     }
 
     function toggleSound(){
-      soundEnabled = document.getElementById("soundToggle").checked;
+      const el = document.getElementById("soundToggle");
+      soundEnabled = !!(el && el.checked);
       localStorage.setItem("soundEnabled", String(soundEnabled));
 
       const label = document.querySelector('label[for="soundToggle"]');
+      if (!label) return;
+
       if (soundEnabled){
         label.textContent = "🔊 Signalton aktiviert";
         playSound();
@@ -944,13 +934,15 @@
       const savedSound = localStorage.getItem("soundEnabled");
       if (savedSound !== null){
         soundEnabled = savedSound === "true";
-        document.getElementById("soundToggle").checked = soundEnabled;
+        const t = document.getElementById("soundToggle");
+        if (t) t.checked = soundEnabled;
+
         const label = document.querySelector('label[for="soundToggle"]');
-        label.textContent = soundEnabled ? "🔊 Signalton aktiviert" : "🔇 Signalton deaktiviert";
+        if (label) label.textContent = soundEnabled ? "🔊 Signalton aktiviert" : "🔇 Signalton deaktiviert";
       }
     }
 
-    // Scroll-Detektor (damit Timeline beim Scrollen nicht dauernd neu gerendert wird)
+    // Scroll-Detektor
     let isScrolling = false;
     let scrollTimer = null;
     window.addEventListener("scroll", () => {
@@ -969,8 +961,9 @@
       initDaySwitch();
       updateTime();
 
-      if (Notification.permission === "default"){
-        document.getElementById("notificationAlert").classList.add("show");
+      if (("Notification" in window) && Notification.permission === "default"){
+        const a = document.getElementById("notificationAlert");
+        if (a) a.classList.add("show");
       }
 
       try{
@@ -979,44 +972,35 @@
         showPlanError(e);
       }
 
-      // Loop
-     setInterval(async () => {
-     updateTime();
+      setInterval(async () => {
+        updateTime();
 
-     // Auto-Reset prüfen (manueller Tag läuft nach 1 Minute aus)
-    const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
-    const until = parseInt(localStorage.getItem(MANUAL_UNTIL_KEY) || "0", 10);
+        // Auto-Reset prüfen (manueller Tag läuft nach 1 Minute aus)
+        const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
+        const until = parseInt(localStorage.getItem(MANUAL_UNTIL_KEY) || "0", 10);
 
-  if (saved !== "auto" && until > 0 && Date.now() >= until) {
-    localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
-    localStorage.removeItem(MANUAL_UNTIL_KEY);
+        if (saved !== "auto" && until > 0 && Date.now() >= until) {
+          localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
+          localStorage.removeItem(MANUAL_UNTIL_KEY);
 
-    // Buttons aktualisieren
-    const wrap = document.getElementById("daySwitch");
-    if (wrap) {
-      wrap.querySelectorAll(".day-btn").forEach(b => b.classList.remove("active"));
-      const el = wrap.querySelector(`.day-btn[data-day="auto"]`);
-      if (el) el.classList.add("active");
-    }
+          // UI sauber aktualisieren
+          initDaySwitch();
 
-    // Plan neu laden
-    try{
-      await loadPlanForCurrentSelection();
-    } catch(e){
-      showPlanError(e);
-    }
-  }
+          // Plan neu laden
+          try{
+            await loadPlanForCurrentSelection();
+          } catch(e){
+            showPlanError(e);
+          }
+        }
 
-  updateNextItem();
-  checkForNotifications();
-  if (!isScrolling) updateTimeline();
-}, 10000);
-
+        updateNextItem();
+        checkForNotifications();
+        if (!isScrolling) updateTimeline();
+      }, 10000);
     }
 
     start();
   </script>
-
 </body>
 </html>
-
