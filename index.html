@@ -398,9 +398,9 @@
     // Tages-Auswahl (Auto oder manuell)
     const DAY_MAP = ["sun","mon","tue","wed","thu","fri","sat"];
     const DAY_OVERRIDE_KEY = "scheduleDayOverride"; // "auto" oder "mon".."sun"
+    const MANUAL_UNTIL_KEY = "scheduleManualUntilTs";
 
-    // Auto-Reset Timer: nach 1 Minute zurück auf AUTO
-    let manualResetTimer = null;
+
 
     function getTodayKey(){
       return DAY_MAP[new Date().getDay()];
@@ -477,35 +477,15 @@
         if (el) el.classList.add("active");
       }
 
-      btns.forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const key = btn.getAttribute("data-day");
+     // Tag setzen + 1-Minuten-Reset-Merker
+     if (key === "auto"){
+     localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
+     localStorage.removeItem(MANUAL_UNTIL_KEY);
+     } else {
+     localStorage.setItem(DAY_OVERRIDE_KEY, key);
+     localStorage.setItem(MANUAL_UNTIL_KEY, String(Date.now() + 60000)); // 1 Minute
+     }
 
-          // alten Timer stoppen
-          if (manualResetTimer) {
-            clearTimeout(manualResetTimer);
-            manualResetTimer = null;
-          }
-
-          // Tag setzen
-          if (key === "auto"){
-            localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
-          } else {
-            localStorage.setItem(DAY_OVERRIDE_KEY, key);
-
-            // nach 60 Sekunden automatisch zurück auf AUTO
-            manualResetTimer = setTimeout(async () => {
-              localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
-              setActiveButtons();
-              try{
-                await loadPlanForCurrentSelection();
-              } catch(e){
-                showPlanError(e);
-              }
-            }, 60000);
-          }
-
-          setActiveButtons();
 
           // neu laden + neu rendern
           try{
@@ -978,12 +958,38 @@
       }
 
       // Loop
-      setInterval(() => {
-        updateTime();
-        updateNextItem();
-        checkForNotifications();
-        if (!isScrolling) updateTimeline();
-      }, 10000);
+     setInterval(async () => {
+     updateTime();
+
+     // Auto-Reset prüfen (manueller Tag läuft nach 1 Minute aus)
+    const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
+    const until = parseInt(localStorage.getItem(MANUAL_UNTIL_KEY) || "0", 10);
+
+  if (saved !== "auto" && until > 0 && Date.now() >= until) {
+    localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
+    localStorage.removeItem(MANUAL_UNTIL_KEY);
+
+    // Buttons aktualisieren
+    const wrap = document.getElementById("daySwitch");
+    if (wrap) {
+      wrap.querySelectorAll(".day-btn").forEach(b => b.classList.remove("active"));
+      const el = wrap.querySelector(`.day-btn[data-day="auto"]`);
+      if (el) el.classList.add("active");
+    }
+
+    // Plan neu laden
+    try{
+      await loadPlanForCurrentSelection();
+    } catch(e){
+      showPlanError(e);
+    }
+  }
+
+  updateNextItem();
+  checkForNotifications();
+  if (!isScrolling) updateTimeline();
+}, 10000);
+
     }
 
     start();
@@ -991,3 +997,4 @@
 
 </body>
 </html>
+
