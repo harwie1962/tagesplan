@@ -16,7 +16,7 @@ window.schedule = [
 
   { time: "15:30", title: "Kleine Kohlenhydratportion", description: "Haferflocken 30 g + Wasser oder Tee", calories: 115 },
   { time: "17:30", title: "L-Glutamin (2. Portion)", description: "3–5 g", calories: 0 },
-  { time: "17:57", title: "test", description: "3–5 g", calories: 0 },
+  
   { time: "18:00", title: "Abendmedikamente", description: "Eliquis/Apixaban 5 mg + Rosuvastatin + Ramipril", calories: 0 },
   { time: "18:30", title: "Leicht & warm", description: "Buchweizen (gekocht) 60 g + Gemüse 250 g + Miso-Dashi 1–2 TL", calories: 220 },
 
