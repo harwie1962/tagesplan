@@ -58,11 +58,17 @@
     body.medical .day-btn.active{background:rgba(255,255,255,.95);border-color:rgba(16,32,20,.25)}
 
     .sound-toggle{
-      display:inline-flex;align-items:center;gap:10px;padding:10px 14px;
+      display:flex;align-items:center;gap:14px;padding:12px 14px;
       background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);
       border-radius:12px;margin-top:12px;flex-wrap:wrap;justify-content:center
     }
-    .sound-toggle input{width:20px;height:20px;cursor:pointer}
+    .sound-toggle.muted{opacity:0.75}
+    .sound-toggle .toggle-row{display:flex;align-items:center;gap:10px}
+    .sound-toggle input[type="checkbox"]{width:20px;height:20px;cursor:pointer}
+    .sound-toggle .volume-control{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
+    .sound-toggle .volume-control label{font-weight:700}
+    .sound-toggle input[type="range"]{width:180px;accent-color:#0ea5e9;cursor:pointer}
+    .sound-toggle .volume-value{font-weight:800;font-variant-numeric:tabular-nums}
 
     .content{padding:26px;color:#0e172a}
     body.medical .content{color:#0e1b12}
@@ -177,9 +183,16 @@
         <button class="day-btn" data-day="sun">SO</button>
       </div>
 
-      <div class="sound-toggle">
-        <input type="checkbox" id="soundToggle" checked />
-        <label for="soundToggle" style="cursor:pointer;">🔊 Signalton aktiviert</label>
+      <div class="sound-toggle" id="soundControls">
+        <div class="toggle-row">
+          <input type="checkbox" id="soundToggle" checked />
+          <label for="soundToggle" style="cursor:pointer;">🔊 Signalton aktiviert</label>
+        </div>
+        <div class="volume-control">
+          <label for="volumeSlider" style="cursor:pointer;">🔈 Lautstärke</label>
+          <input type="range" id="volumeSlider" min="0" max="100" value="35" />
+          <span class="volume-value" id="volumeValue">35%</span>
+        </div>
       </div>
     </div>
 
@@ -245,19 +258,70 @@
     // A) Sound (notify.mp3 im ROOT) + leiser + genau 1 Wiederholung
     // =========================================================
     const NOTIFY_MP3 = "notify.mp3";     // Datei liegt im Repo-Root
-    const NOTIFY_VOL = 0.35;            // 0.0 – 1.0
+    const NOTIFY_VOL_DEFAULT = 0.35;     // 0.0 – 1.0
     const NOTIFY_REPEAT_AFTER_FIRST = 1; // 1 = genau einmal wiederholen
+    const SOUND_ENABLED_KEY = "soundEnabled";
+    const SOUND_VOLUME_KEY = "soundVolume";
 
     let notifyAudio = null;
     let soundEnabled = true;
+    let notifyVolume = NOTIFY_VOL_DEFAULT;
     let repeatRemaining = 0;
+
+    function clampVolume(v){
+      if (Number.isNaN(v)) return NOTIFY_VOL_DEFAULT;
+      return Math.min(1, Math.max(0, v));
+    }
+
+    function updateVolumeUI(){
+      const slider = document.getElementById("volumeSlider");
+      const label = document.getElementById("volumeValue");
+      const percent = Math.round(notifyVolume * 100);
+
+      if (slider) slider.value = String(percent);
+      if (label) label.textContent = `${percent}%`;
+    }
+
+    function setVolume(volume, { persist=true, preview=false } = {}){
+      notifyVolume = clampVolume(volume);
+      if (persist) localStorage.setItem(SOUND_VOLUME_KEY, String(notifyVolume));
+      if (notifyAudio) notifyAudio.volume = notifyVolume;
+      updateVolumeUI();
+
+      if (preview && soundEnabled) playSound();
+    }
+
+    function handleVolumeInput(){
+      const slider = document.getElementById("volumeSlider");
+      if (!slider) return;
+
+      const val = parseInt(slider.value, 10);
+      const normalized = clampVolume((Number.isNaN(val) ? notifyVolume : val / 100));
+      setVolume(normalized, { persist:true, preview:false });
+    }
+
+    function handleVolumeChange(){
+      const slider = document.getElementById("volumeSlider");
+      if (!slider) return;
+
+      const val = parseInt(slider.value, 10);
+      const normalized = clampVolume((Number.isNaN(val) ? notifyVolume : val / 100));
+      setVolume(normalized, { persist:true, preview:true });
+    }
+
+    function updateSoundControlsState(){
+      const container = document.getElementById("soundControls");
+      if (container){
+        container.classList.toggle("muted", !soundEnabled);
+      }
+    }
 
     function initAudio(){
       if (notifyAudio) return;
 
       notifyAudio = new Audio(NOTIFY_MP3);
       notifyAudio.preload = "auto";
-      notifyAudio.volume = NOTIFY_VOL;
+      notifyAudio.volume = notifyVolume;
 
       notifyAudio.addEventListener("ended", () => {
         if (repeatRemaining > 0){
@@ -280,6 +344,7 @@
       try{
         notifyAudio.pause();
         notifyAudio.currentTime = 0;
+        notifyAudio.volume = notifyVolume;
         notifyAudio.play().catch(err => console.warn("Audio Play blockiert:", err));
       } catch(e){
         console.warn("Audio-Fehler:", e);
@@ -680,7 +745,7 @@
     function toggleSoundUI(){
       const el = document.getElementById("soundToggle");
       soundEnabled = !!(el && el.checked);
-      localStorage.setItem("soundEnabled", String(soundEnabled));
+      localStorage.setItem(SOUND_ENABLED_KEY, String(soundEnabled));
 
       const label = document.querySelector('label[for="soundToggle"]');
       if (!label) return;
@@ -691,6 +756,8 @@
       } else {
         label.textContent = "🔇 Signalton deaktiviert";
       }
+
+      updateSoundControlsState();
     }
 
     function scrollToNext(){
@@ -714,7 +781,7 @@
     }
 
     function loadSoundPreference(){
-      const savedSound = localStorage.getItem("soundEnabled");
+      const savedSound = localStorage.getItem(SOUND_ENABLED_KEY);
       if (savedSound !== null){
         soundEnabled = savedSound === "true";
         const t = document.getElementById("soundToggle");
@@ -722,6 +789,19 @@
         const label = document.querySelector('label[for="soundToggle"]');
         if (label) label.textContent = soundEnabled ? "🔊 Signalton aktiviert" : "🔇 Signalton deaktiviert";
       }
+
+      updateSoundControlsState();
+    }
+
+    function loadVolumePreference(){
+      const savedVolume = parseFloat(localStorage.getItem(SOUND_VOLUME_KEY));
+      if (!Number.isNaN(savedVolume)){
+        notifyVolume = clampVolume(savedVolume);
+      } else {
+        notifyVolume = NOTIFY_VOL_DEFAULT;
+      }
+
+      setVolume(notifyVolume, { persist:false, preview:false });
     }
 
     // Scroll-Detektor (Timeline nicht dauernd neu rendern)
@@ -781,6 +861,7 @@
     async function start(){
       loadTheme();
       loadSoundPreference();
+      loadVolumePreference();
       loadOffset();
       initDaySwitch();
       updateTime();
@@ -788,6 +869,12 @@
       // UI Bindings
       const st = document.getElementById("soundToggle");
       if (st) st.addEventListener("change", toggleSoundUI);
+
+      const volumeSlider = document.getElementById("volumeSlider");
+      if (volumeSlider){
+        volumeSlider.addEventListener("input", handleVolumeInput);
+        volumeSlider.addEventListener("change", handleVolumeChange);
+      }
 
       const btnEnable = document.getElementById("btnEnableNotifications");
       if (btnEnable) btnEnable.addEventListener("click", requestNotificationPermission);
