@@ -20,7 +20,7 @@ window.schedule = [
   { time: "18:00", title: "Abendmedikamente", description: "Eliquis/Apixaban 5 mg + Rosuvastatin + Ramipril", calories: 0 },
   { time: "18:30", title: "Leicht & warm", description: "Buchweizen (gekocht) 60 g + Gemüse 250 g + Miso-Dashi 1–2 TL", calories: 220 },
   
-  { time: "19:55", title: "Test ton", description: "", calories: 0 },
+  { time: "21:05", title: "Test ton", description: "", calories: 0 },
   { time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
   { time: "20:30", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 },
   { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
