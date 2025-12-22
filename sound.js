@@ -72,13 +72,22 @@
     o.stop(when + dur + 0.01);
   }
 
-  function pattern(c, startAt) {
-    // 2-Ton-Pattern: erst hoch, dann tiefer
-    tone(c, startAt, 900, 0.22);
-    tone(c, startAt + 0.14, 650, 0.30);
-    // Patternlänge (für Wiederholung)
-    return 0.14 + 0.30 + 0.06; // etwas Puffer
-  }
+  // Ersetze in sound.js nur die Funktion pattern(c, startAt)
+// Tonfolge: C – Eb – G – C (equal temperament)
+// C4=261.63, Eb4=311.13, G4=392.00, C5=523.25
+
+function pattern(c, startAt) {
+  const step = 0.16;   // Abstand der Noten
+  const dur  = 0.14;   // Dauer je Note
+
+  tone(c, startAt + 0*step, 261.63, dur); // C4
+  tone(c, startAt + 1*step, 311.13, dur); // Eb4
+  tone(c, startAt + 2*step, 392.00, dur); // G4
+  tone(c, startAt + 3*step, 523.25, dur); // C5
+
+  return 4*step + 0.06; // Patternlänge (+Puffer für Wiederholung)
+}
+
 
   function play() {
     if (!enabled) return;
