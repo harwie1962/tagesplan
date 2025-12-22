@@ -466,6 +466,17 @@
       return now.getHours()*60 + now.getMinutes();
     }
 
+    function getCurrentSecondsOfDay(){
+      const now = new Date();
+      return (now.getHours()*60 + now.getMinutes())*60 + now.getSeconds();
+    }
+
+    function getSecondsUntil(targetMinutes){
+      const nowSeconds = getCurrentSecondsOfDay();
+      const targetSeconds = (targetMinutes % 1440) * 60;
+      return (targetSeconds - nowSeconds + 86400) % 86400;
+    }
+
     function buildPlanOptions(){
       return {
         offsetMinutes,
@@ -696,15 +707,12 @@
       if (nextIndex === -1 || nextIndex === lastNotifiedIndex) return;
 
       const nextItem = schedule[nextIndex];
-      const currentMinutes = getCurrentMinutes();
       const nextMinutes = getEffectiveItemMinutes(nextItem);
+      const secondsUntilStart = getSecondsUntil(nextMinutes);
+      const REMINDER_LEAD_SECONDS = 120; // 2 Minuten
 
-      let minutesUntil = nextMinutes - currentMinutes;
-      if (minutesUntil < -720) minutesUntil += 1440;
-      if (minutesUntil < 0) minutesUntil += 1440;
-
-      // ✅ Auslösen: genau 2 Minuten vor Termin
-      if (minutesUntil === 2){
+      // ✅ Auslösen: 2 Minuten vor Termin (tolerant, falls die Seite kurz verzögert ist)
+      if (secondsUntilStart > 0 && secondsUntilStart <= REMINDER_LEAD_SECONDS){
         if (soundEnabled){
           playSound();
         }
