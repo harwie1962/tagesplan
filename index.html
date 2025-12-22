@@ -846,29 +846,78 @@
     /* =========================
        🔊 AUDIO (notify.mp3 ROOT)
        ========================= */
+    // =========================
+// 🔊 AUDIO mit Wiederholung
+// =========================
 
-    let notifyAudio = null;
-    let soundEnabled = true;
+let notifyAudio = null;
+let soundEnabled = true;
+let repeatCount = 0;
+const MAX_REPEATS = 3; // 🔁 Anzahl Wiederholungen
 
-    function initAudio(){
-      if (!notifyAudio){
-        notifyAudio = new Audio("notify.mp3"); // ✅ MP3 liegt im Root
-        notifyAudio.preload = "auto";
-      }
-    }
+function initAudio(){
+  if (!notifyAudio){
+    notifyAudio = new Audio("notify.mp3"); // liegt im ROOT
+    notifyAudio.preload = "auto";
 
-    function playSound(){
+    notifyAudio.addEventListener("ended", () => {
       if (!soundEnabled) return;
-      initAudio();
-      try{
+
+      repeatCount++;
+      if (repeatCount < MAX_REPEATS){
         notifyAudio.currentTime = 0;
-        notifyAudio.play().catch(err => {
-          console.warn("Audio konnte nicht abgespielt werden:", err);
-        });
-      }catch(e){
-        console.warn("Audio-Fehler:", e);
+        notifyAudio.play();
+      } else {
+        repeatCount = 0; // Reset nach letzter Wiederholung
       }
+    });
+  }
+}
+
+function playSound(){
+  if (!soundEnabled) return;
+
+  initAudio();
+  repeatCount = 0;
+  notifyAudio.currentTime = 0;
+
+  notifyAudio.play().catch(err => {
+    console.warn("Audio konnte nicht abgespielt werden:", err);
+  });
+}
+
+function toggleSound(){
+  const cb = document.getElementById("soundToggle");
+  soundEnabled = !!(cb && cb.checked);
+  localStorage.setItem("soundEnabled", String(soundEnabled));
+
+  const label = document.querySelector('label[for="soundToggle"]');
+  if (!label) return;
+
+  if (soundEnabled){
+    label.textContent = "🔊 Signalton aktiviert";
+    playSound(); // kurzer Bestätigungston
+  } else {
+    label.textContent = "🔇 Signalton deaktiviert";
+  }
+}
+
+function loadSoundPreference(){
+  const saved = localStorage.getItem("soundEnabled");
+  if (saved !== null){
+    soundEnabled = (saved === "true");
+    const cb = document.getElementById("soundToggle");
+    if (cb) cb.checked = soundEnabled;
+
+    const label = document.querySelector('label[for="soundToggle"]');
+    if (label){
+      label.textContent = soundEnabled
+        ? "🔊 Signalton aktiviert"
+        : "🔇 Signalton deaktiviert";
     }
+  }
+}
+
 
     function toggleSound(){
       const el = document.getElementById("soundToggle");
