@@ -326,6 +326,9 @@
       <div class="sound-toggle">
         <input type="checkbox" id="soundToggle" checked onchange="toggleSound()" />
         <label for="soundToggle" style="cursor:pointer;">🔊 Signalton aktiviert</label>
+
+        <!-- iPad/iOS: einmal tippen, um Audio freizuschalten -->
+        <button class="btn btn-secondary" onclick="unlockAudio()">🔓 Audio aktivieren (1× tippen)</button>
       </div>
     </div>
 
@@ -387,27 +390,118 @@
 
   <script>
     // =========================================================
-    // 1) Plan-Laden: plans/mon.js ... plans/sun.js
-    //    Plan-Dateien müssen enthalten: window.schedule = [ ... ];
+    // 0) Sound (notify.mp3 im ROOT) + leiser + 1 Wiederholung
+    //    WICHTIG iPad/iOS: erst "Audio aktivieren" tippen!
     // =========================================================
+    const NOTIFY_MP3 = "notify.mp3"; // liegt im Repo-Root
+    const DEFAULT_VOLUME = 0.30;     // leiser
+    const REPEAT_COUNT = 1;          // 1 Wiederholung => insgesamt 2x
 
+    let notifyAudio = null;
+    let soundEnabled = true;
+    let audioUnlocked = false;
+    let repeatRemaining = 0;
+
+    function initAudio(){
+      if (notifyAudio) return;
+      notifyAudio = new Audio(NOTIFY_MP3);
+      notifyAudio.preload = "auto";
+      notifyAudio.volume = DEFAULT_VOLUME;
+
+      notifyAudio.addEventListener("ended", () => {
+        if (repeatRemaining > 0){
+          repeatRemaining--;
+          notifyAudio.currentTime = 0;
+          notifyAudio.play().catch(()=>{});
+        }
+      });
+    }
+
+    // iOS: muss durch User-Tap ausgelöst werden
+    async function unlockAudio(){
+      initAudio();
+      try{
+        const prev = notifyAudio.volume;
+        notifyAudio.volume = 0.0;            // stumm freischalten
+        await notifyAudio.play();
+        notifyAudio.pause();
+        notifyAudio.currentTime = 0;
+        notifyAudio.volume = prev;
+
+        audioUnlocked = true;
+
+        // kurzer Proof
+        if (soundEnabled) playSound();
+      } catch(e){
+        console.warn("Audio unlock fehlgeschlagen:", e);
+        alert("Audio konnte nicht freigeschaltet werden. Bitte nochmal tippen.");
+      }
+    }
+
+    function playSound(){
+      if (!soundEnabled) return;
+
+      initAudio();
+
+      if (!audioUnlocked){
+        console.warn("Audio ist noch gesperrt (iOS). Einmal 'Audio aktivieren' tippen.");
+        return;
+      }
+
+      repeatRemaining = REPEAT_COUNT;
+
+      try{
+        notifyAudio.pause();
+        notifyAudio.currentTime = 0;
+        notifyAudio.play().catch(err => console.warn("Audio Play blockiert:", err));
+      } catch(e){
+        console.warn("Audio-Fehler:", e);
+      }
+    }
+
+    function toggleSound(){
+      soundEnabled = document.getElementById("soundToggle").checked;
+      localStorage.setItem("soundEnabled", String(soundEnabled));
+
+      const label = document.querySelector('label[for="soundToggle"]');
+      if (label){
+        label.textContent = soundEnabled ? "🔊 Signalton aktiviert" : "🔇 Signalton deaktiviert";
+      }
+
+      if (soundEnabled) {
+        // nur kurz, wenn Audio schon freigeschaltet ist
+        if (audioUnlocked) playSound();
+      }
+    }
+
+    function loadSoundPreference(){
+      const savedSound = localStorage.getItem("soundEnabled");
+      if (savedSound !== null){
+        soundEnabled = savedSound === "true";
+        const t = document.getElementById("soundToggle");
+        if (t) t.checked = soundEnabled;
+
+        const label = document.querySelector('label[for="soundToggle"]');
+        if (label) label.textContent = soundEnabled ? "🔊 Signalton aktiviert" : "🔇 Signalton deaktiviert";
+      }
+    }
+
+    // =========================================================
+    // 1) Plan-Laden: plans/mon.js ... plans/sun.js
+    // =========================================================
     let schedule = [];
 
     const DAY_MAP = ["sun","mon","tue","wed","thu","fri","sat"];
-    const DAY_OVERRIDE_KEY = "scheduleDayOverride"; // "auto" oder "mon".."sun"
+    const DAY_OVERRIDE_KEY = "scheduleDayOverride";
     const MANUAL_UNTIL_KEY = "scheduleManualUntilTs";
 
-    function getTodayKey(){
-      return DAY_MAP[new Date().getDay()];
-    }
+    function getTodayKey(){ return DAY_MAP[new Date().getDay()]; }
 
     function getSelectedDayKey(){
-      // URL override: ?day=mon
       const params = new URLSearchParams(window.location.search);
       const q = (params.get("day") || "").toLowerCase();
       if (DAY_MAP.includes(q)) return q;
 
-      // localStorage override
       const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
       if (saved === "auto") return getTodayKey();
       if (DAY_MAP.includes(saved)) return saved;
@@ -415,9 +509,7 @@
       return getTodayKey();
     }
 
-    function getPlanFileForDay(dayKey){
-      return `plans/${dayKey}.js`;
-    }
+    function getPlanFileForDay(dayKey){ return `plans/${dayKey}.js`; }
 
     function loadScheduleScript(src){
       return new Promise((resolve, reject) => {
@@ -426,7 +518,7 @@
 
         const s = document.createElement("script");
         s.id = "planScript";
-        s.src = src + "?v=" + Date.now(); // Cache-bust
+        s.src = src + "?v=" + Date.now();
         s.onload = () => resolve();
         s.onerror = () => reject(new Error("Konnte Plan-Datei nicht laden: " + src));
         document.head.appendChild(s);
@@ -448,6 +540,7 @@
       setStatusPlanInfo();
       updateTimeline();
       updateNextItem();
+      lastNotifiedIndex = -1;
     }
 
     function setStatusPlanInfo(){
@@ -484,16 +577,13 @@
             localStorage.removeItem(MANUAL_UNTIL_KEY);
           } else {
             localStorage.setItem(DAY_OVERRIDE_KEY, key);
-            localStorage.setItem(MANUAL_UNTIL_KEY, String(Date.now() + 60000)); // 1 Minute bis Auto-Reset
+            localStorage.setItem(MANUAL_UNTIL_KEY, String(Date.now() + 60000));
           }
 
           setActiveButtons();
 
-          try{
-            await loadPlanForCurrentSelection();
-          } catch(e){
-            showPlanError(e);
-          }
+          try{ await loadPlanForCurrentSelection(); }
+          catch(e){ showPlanError(e); }
         });
       });
 
@@ -520,7 +610,7 @@
     }
 
     // =========================================================
-    // 2) Offset-Logik (Morgen-Offset + Nachmittag-Shift ab 12:00)
+    // 2) Offset-Logik
     // =========================================================
     const PLAN_START = "06:15";
     const MORNING_CUTOFF = "12:00";
@@ -553,18 +643,21 @@
       return now.getHours()*60 + now.getMinutes();
     }
 
+    function getCurrentSecondsOfDay(){
+      const now = new Date();
+      return (now.getHours()*60 + now.getMinutes())*60 + now.getSeconds();
+    }
+
     function getPerItemOffset(item){
       const baseMin = getTimeInMinutes(item.time);
       const cutoffMin = getTimeInMinutes(MORNING_CUTOFF);
 
       let off = 0;
 
-      // Morgen-Offset:
       if (applyAllDay || baseMin < cutoffMin){
         off += offsetMinutes;
       }
 
-      // Nachmittag-Shift:
       if (baseMin >= cutoffMin){
         off += afternoonOffsetMinutes;
       }
@@ -676,7 +769,7 @@
     }
 
     // =========================================================
-    // 3) Anzeige-Logik (Timeline / Next)
+    // 3) Anzeige-Logik
     // =========================================================
     function updateTime(){
       const now = new Date();
@@ -785,53 +878,16 @@
           <div class="description">
             <strong>${nextItem.title}</strong><br>
             ${nextItem.description ? `${nextItem.description}<br>` : ""}
-            ${nextItem.calories > 0 ? `<br>📊 ${nextItem.calories} kcal</div>` : ""}
+            ${nextItem.calories > 0 ? `<br>📊 ${nextItem.calories} kcal` : ""}
+            <br><br><small>In ca. ${minutesUntil} min</small>
           </div>
         </div>
       `;
     }
 
     // =========================================================
-    // 4) Notifications / Sound (notify.mp3 im Root) / Theme / Scroll
+    // 4) Notifications + Termin-Trigger (Sound/Notification)
     // =========================================================
-    function checkForNotifications(){
-      if (!("Notification" in window)) return;
-      if (Notification.permission !== "granted") return;
-      if (!Array.isArray(schedule) || !schedule.length) return;
-
-      const { nextIndex } = findCurrentAndNext();
-      if (nextIndex === -1 || nextIndex === lastNotifiedIndex) return;
-
-      const nextItem = schedule[nextIndex];
-      const currentMinutes = getCurrentMinutes();
-      const nextMinutes = getEffectiveItemMinutes(nextItem);
-
-      let minutesUntil = nextMinutes - currentMinutes;
-      if (minutesUntil < -720) minutesUntil += 1440;
-      if (minutesUntil < 0) minutesUntil += 1440;
-
-      if (minutesUntil <= 2){
-        sendNotification(nextItem);
-        lastNotifiedIndex = nextIndex;
-      }
-    }
-
-    function sendNotification(item){
-      if (soundEnabled) playSound();
-      const effTime = getEffectiveItemTimeStr(item);
-
-      const n = new Notification("🍽️ Tagesplan Erinnerung", {
-        body: `${effTime} Uhr: ${item.title}${item.description ? "\n" + item.description : ""}`,
-        tag: "meal-reminder",
-        requireInteraction: true
-      });
-
-      n.onclick = function(){
-        window.focus();
-        n.close();
-      };
-    }
-
     function requestNotificationPermission(){
       if (!("Notification" in window)) return;
       Notification.requestPermission().then(permission => {
@@ -843,66 +899,29 @@
       });
     }
 
-    /* =========================
-       🔊 AUDIO (notify.mp3 ROOT)
-       ========================= */
+    function sendNotification(item){
+      if (!("Notification" in window)) return;
+      if (Notification.permission !== "granted") return;
 
-    let notifyAudio = null;
-    let soundEnabled = true;
-
-    function initAudio(){
-      if (!notifyAudio){
-        notifyAudio = new Audio("notify.mp3"); // ✅ MP3 liegt im Root
-        notifyAudio.preload = "auto";
-      }
-    }
-
-    function playSound(){
-      if (!soundEnabled) return;
-      initAudio();
-      try{
-        notifyAudio.currentTime = 0;
-        notifyAudio.play().catch(err => {
-          console.warn("Audio konnte nicht abgespielt werden:", err);
-        });
-      }catch(e){
-        console.warn("Audio-Fehler:", e);
-      }
-    }
-
-    function toggleSound(){
-      const el = document.getElementById("soundToggle");
-      soundEnabled = !!(el && el.checked);
-      localStorage.setItem("soundEnabled", String(soundEnabled));
-
-      const label = document.querySelector('label[for="soundToggle"]');
-      if (!label) return;
-
-      if (soundEnabled){
-        label.textContent = "🔊 Signalton aktiviert";
-        playSound(); // Bestätigungston
-      } else {
-        label.textContent = "🔇 Signalton deaktiviert";
-      }
-    }
-
-    function loadSoundPreference(){
-      const savedSound = localStorage.getItem("soundEnabled");
-      if (savedSound !== null){
-        soundEnabled = savedSound === "true";
-        const t = document.getElementById("soundToggle");
-        if (t) t.checked = soundEnabled;
-
-        const label = document.querySelector('label[for="soundToggle"]');
-        if (label) label.textContent = soundEnabled ? "🔊 Signalton aktiviert" : "🔇 Signalton deaktiviert";
-      }
+      const effTime = getEffectiveItemTimeStr(item);
+      const n = new Notification("🍽️ Tagesplan Erinnerung", {
+        body: `${effTime} Uhr: ${item.title}${item.description ? "\n" + item.description : ""}`,
+        tag: "meal-reminder",
+        requireInteraction: true
+      });
+      n.onclick = function(){
+        window.focus();
+        n.close();
+      };
     }
 
     function testNotification(){
+      // Sound geht nur, wenn Audio freigeschaltet wurde (iPad)
+      if (soundEnabled) playSound();
+
       if (!("Notification" in window)) return;
 
       if (Notification.permission === "granted"){
-        if (soundEnabled) playSound();
         new Notification("🍽️ Test-Benachrichtigung", { body: "Die Benachrichtigungen funktionieren!" });
       } else if (Notification.permission === "denied"){
         alert("Benachrichtigungen wurden blockiert. Bitte aktiviere sie in den Browser-Einstellungen.");
@@ -911,15 +930,58 @@
       }
     }
 
-    function scrollToNext(){
+    // robust: feuert einmal pro Termin im Zeitfenster
+    let firedTokens = {}; // pro TagKey -> token->true
+
+    function checkForNotifications(){
       if (!Array.isArray(schedule) || !schedule.length) return;
-      const { nextIndex } = findCurrentAndNext();
-      if (nextIndex !== -1){
-        const el = document.getElementById(`item-${nextIndex}`);
-        if (el) el.scrollIntoView({ behavior:"smooth", block:"center" });
+
+      const dayKey = getSelectedDayKey();
+      if (!firedTokens[dayKey]) firedTokens[dayKey] = {};
+
+      const nowSec = getCurrentSecondsOfDay();
+      const LEAD = 120;  // 2 Minuten vorher
+      const TOL  = 15;   // Toleranz falls Timer drüber läuft
+
+      let best = null;
+
+      for (let i=0;i<schedule.length;i++){
+        const item = schedule[i];
+        const effMin = getEffectiveItemMinutes(item);
+        const effSec = (effMin % 1440) * 60;
+
+        // delta 0..86399
+        const delta = (effSec - nowSec + 86400) % 86400;
+
+        // im Fenster: <= 2 Minuten VOR Termin
+        // oder ganz knapp NACH Termin (Timer-Schluckauf)
+        const inWindow = (delta <= LEAD) || (delta >= 86400 - TOL);
+        if (!inWindow) continue;
+
+        if (!best || delta < best.delta){
+          best = { i, item, effMin, delta };
+        }
       }
+
+      if (!best) return;
+
+      const token = `${best.i}|${best.effMin}`;
+      if (firedTokens[dayKey][token]) return;
+
+      // ✅ Auslösen
+      if (soundEnabled) playSound();
+
+      if (("Notification" in window) && Notification.permission === "granted"){
+        sendNotification(best.item);
+      }
+
+      firedTokens[dayKey][token] = true;
+      lastNotifiedIndex = best.i;
     }
 
+    // =========================================================
+    // 5) Theme / Scroll
+    // =========================================================
     function toggleTheme(){
       document.body.classList.toggle("medical");
       const isMedical = document.body.classList.contains("medical");
@@ -929,6 +991,15 @@
     function loadTheme(){
       const savedTheme = localStorage.getItem("theme");
       if (savedTheme === "medical") document.body.classList.add("medical");
+    }
+
+    function scrollToNext(){
+      if (!Array.isArray(schedule) || !schedule.length) return;
+      const { nextIndex } = findCurrentAndNext();
+      if (nextIndex !== -1){
+        const el = document.getElementById(`item-${nextIndex}`);
+        if (el) el.scrollIntoView({ behavior:"smooth", block:"center" });
+      }
     }
 
     // Scroll-Detektor
@@ -941,7 +1012,7 @@
     }, { passive:true });
 
     // =========================================================
-    // 5) Start
+    // 6) Start
     // =========================================================
     async function start(){
       loadTheme();
@@ -961,6 +1032,7 @@
         showPlanError(e);
       }
 
+      // alle 10s
       setInterval(async () => {
         updateTime();
 
@@ -973,7 +1045,12 @@
           localStorage.removeItem(MANUAL_UNTIL_KEY);
 
           // UI aktualisieren
-          initDaySwitch();
+          const wrap = document.getElementById("daySwitch");
+          if (wrap){
+            wrap.querySelectorAll(".day-btn").forEach(b => b.classList.remove("active"));
+            const el = wrap.querySelector('.day-btn[data-day="auto"]');
+            if (el) el.classList.add("active");
+          }
 
           // Plan neu laden
           try{
@@ -984,7 +1061,7 @@
         }
 
         updateNextItem();
-        checkForNotifications();
+        checkForNotifications();       // ✅ hier wird Termin-Sound ausgelöst
         if (!isScrolling) updateTimeline();
       }, 10000);
     }
