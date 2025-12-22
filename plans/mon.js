@@ -21,7 +21,7 @@ window.schedule = [
   { time: "18:30", title: "Leicht & warm", description: "Buchweizen (gekocht) 60 g + Gemüse 250 g + Miso-Dashi 1–2 TL", calories: 220 },
   { time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
   { time: "20:30", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 },
-  { time: "21:38", title: "Test ton", description: "", calories: 0 },
+  { time: "21:40", title: "Test ton", description: "", calories: 0 },
   { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
 ];
 
