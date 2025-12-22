@@ -1,54 +1,46 @@
-// sound.js
-(function () {
+// assets/sound.js
+window.Sound = (function () {
   let enabled = true;
+
+  function setEnabled(v) { enabled = !!v; }
+  function isEnabled() { return enabled; }
 
   function play() {
     if (!enabled) return;
 
     try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioContext.state === "suspended") audioContext.resume();
 
-      const ctx = new AudioCtx();
-      if (ctx.state === "suspended") ctx.resume();
+      const VOLUME = 0.30;
+      const TYPE = "triangle";
 
-      const VOLUME = 0.35;
+      const notes = [
+        { f: 880, t: 0.00, d: 0.12 },
+        { f: 988, t: 0.14, d: 0.12 },
+        { f: 784, t: 0.28, d: 0.16 }
+      ];
 
-      // Ton 1
-      const o1 = ctx.createOscillator();
-      const g1 = ctx.createGain();
-      o1.connect(g1);
-      g1.connect(ctx.destination);
-      o1.type = "sine";
-      o1.frequency.value = 900;
-      g1.gain.setValueAtTime(VOLUME, ctx.currentTime);
-      g1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.22);
-      o1.start(ctx.currentTime);
-      o1.stop(ctx.currentTime + 0.22);
+      notes.forEach(n => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = TYPE;
+        osc.frequency.value = n.f;
 
-      // Ton 2 (kurz danach)
-      setTimeout(() => {
-        const o2 = ctx.createOscillator();
-        const g2 = ctx.createGain();
-        o2.connect(g2);
-        g2.connect(ctx.destination);
-        o2.type = "sine";
-        o2.frequency.value = 650;
-        g2.gain.setValueAtTime(VOLUME, ctx.currentTime);
-        g2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.30);
-        o2.start(ctx.currentTime);
-        o2.stop(ctx.currentTime + 0.30);
-      }, 140);
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+
+        const start = audioContext.currentTime + n.t;
+        gain.gain.setValueAtTime(VOLUME, start);
+        gain.gain.exponentialRampToValueAtTime(0.01, start + n.d);
+
+        osc.start(start);
+        osc.stop(start + n.d);
+      });
     } catch (e) {
-      // kein alert, nur still
-      console && console.error && console.error("Sound-Fehler:", e);
+      console.error("Sound-Fehler:", e);
     }
   }
 
-  function setEnabled(v) {
-    enabled = !!v;
-  }
-
-  window.Sound = { play, setEnabled };
+  return { play, setEnabled, isEnabled };
 })();
-
