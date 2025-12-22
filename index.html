@@ -407,7 +407,7 @@
       setStatusPlanInfo();
       updateTimeline();
       updateNextItem();
-      lastNotifiedIndex = -1;
+      lastAlarmToken = null;
     }
 
     function setStatusPlanInfo(){
@@ -464,17 +464,6 @@
     function getCurrentMinutes(){
       const now = new Date();
       return now.getHours()*60 + now.getMinutes();
-    }
-
-    function getCurrentSecondsOfDay(){
-      const now = new Date();
-      return (now.getHours()*60 + now.getMinutes())*60 + now.getSeconds();
-    }
-
-    function getSecondsUntil(targetMinutes){
-      const nowSeconds = getCurrentSecondsOfDay();
-      const targetSeconds = (targetMinutes % 1440) * 60;
-      return (targetSeconds - nowSeconds + 86400) % 86400;
     }
 
     function buildPlanOptions(){
@@ -551,7 +540,7 @@
       const mins = actualStart - planStart;
       saveOffset(mins, anchorInput.value);
 
-      lastNotifiedIndex = -1;
+      lastAlarmToken = null;
       updateTimeline();
       updateNextItem();
     }
@@ -563,21 +552,21 @@
       const anchorInput = document.getElementById("anchorTime");
       if (anchorInput) anchorInput.value = "";
 
-      lastNotifiedIndex = -1;
+      lastAlarmToken = null;
       updateTimeline();
       updateNextItem();
     }
 
     function shiftAfternoon(delta){
       saveAfternoonOffset((afternoonOffsetMinutes || 0) + delta);
-      lastNotifiedIndex = -1;
+      lastAlarmToken = null;
       updateTimeline();
       updateNextItem();
     }
 
     function resetAfternoonShift(){
       saveAfternoonOffset(0);
-      lastNotifiedIndex = -1;
+      lastAlarmToken = null;
       updateTimeline();
       updateNextItem();
     }
@@ -680,7 +669,7 @@
       `;
     }
 
-    let lastNotifiedIndex = -1;
+    let lastAlarmToken = null;
 
     function sendNotification(item){
       // Browser-Notification; der Signalton wird in checkForNotifications ausgelöst
@@ -696,32 +685,50 @@
       }
     }
 
+    function normalizeMinutes(minutes){
+      return ((minutes % 1440) + 1440) % 1440;
+    }
+
     function checkForNotifications(){
       if (!Array.isArray(schedule) || !schedule.length) return;
 
-      // Wenn Notifications erlaubt: wir senden Notification + Sound
-      // Wenn nicht erlaubt: wir spielen NUR Sound (damit es trotzdem funktioniert)
       const canNotify = ("Notification" in window) && (Notification.permission === "granted");
+      const dayKey = getSelectedDayKey();
+      const now = new Date();
+      const nowSec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
 
-      const { nextIndex } = findCurrentAndNext();
-      if (nextIndex === -1 || nextIndex === lastNotifiedIndex) return;
+      let closestDelta = Infinity;
+      let closestIndex = -1;
+      let closestEffMinutes = 0;
 
-      const nextItem = schedule[nextIndex];
-      const nextMinutes = getEffectiveItemMinutes(nextItem);
-      const secondsUntilStart = getSecondsUntil(nextMinutes);
-      const REMINDER_LEAD_SECONDS = 120; // 2 Minuten
+      schedule.forEach((item, index) => {
+        const effMinutes = getEffectiveItemMinutes(item);
+        const effMinutesNormalized = normalizeMinutes(effMinutes);
+        const effSec = effMinutesNormalized * 60;
+        const deltaSec = (effSec - nowSec + 86400) % 86400;
 
-      // ✅ Auslösen: 2 Minuten vor Termin (tolerant, falls die Seite kurz verzögert ist)
-      if (secondsUntilStart > 0 && secondsUntilStart <= REMINDER_LEAD_SECONDS){
-        if (soundEnabled){
-          playSound();
+        if (deltaSec < closestDelta){
+          closestDelta = deltaSec;
+          closestIndex = index;
+          closestEffMinutes = effMinutesNormalized;
         }
+      });
 
-        if (canNotify){
-          sendNotification(nextItem);
+      if (closestIndex === -1) return;
+
+      if (closestDelta <= 120){
+        const alarmToken = `${dayKey}|${closestIndex}|${closestEffMinutes}`;
+        if (alarmToken !== lastAlarmToken){
+          if (soundEnabled){
+            playSound();
+          }
+          if (canNotify){
+            sendNotification(schedule[closestIndex]);
+          }
+          lastAlarmToken = alarmToken;
         }
-
-        lastNotifiedIndex = nextIndex;
+      } else if (closestDelta > 300){
+        lastAlarmToken = null;
       }
     }
 
@@ -904,7 +911,7 @@
       const aAll = document.getElementById("applyAllDay");
       if (aAll) aAll.addEventListener("change", () => {
         saveApplyAllDay(aAll.checked);
-        lastNotifiedIndex = -1;
+        lastAlarmToken = null;
         updateTimeline();
         updateNextItem();
       });
