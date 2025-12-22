@@ -635,9 +635,10 @@
 
     let lastNotifiedIndex = -1;
 
-    function sendNotification(item){
-      // ✅ Sound wird hier ausgelöst (Terminauslösung)
-      playSound();
+    function sendNotification(item, playSoundFirst = true){
+      if (playSoundFirst && soundEnabled){
+        playSound();
+      }
 
       const effTime = getEffectiveItemTimeStr(item);
 
@@ -677,7 +678,7 @@
         }
 
         if (canNotify){
-          sendNotification(nextItem); // (enthält playSound bereits, aber Sound ist oben schon gespielt)
+          sendNotification(nextItem, false); // Sound wurde oben bereits berücksichtigt
         }
 
         lastNotifiedIndex = nextIndex;
