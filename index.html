@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -79,6 +80,40 @@
       border:1px solid rgba(255,255,255,.18);
       border-radius:12px;
       display:inline-block;
+    }
+
+    .day-switch{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-top:12px;
+    }
+    .day-btn{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.25);
+      background:rgba(255,255,255,.10);
+      color:#fff;
+      cursor:pointer;
+      font-weight:800;
+      font-size:13px;
+      transition:transform .15s ease, background .15s ease;
+      user-select:none;
+    }
+    .day-btn:hover{ transform:translateY(-1px); background:rgba(255,255,255,.16); }
+    .day-btn.active{
+      background:rgba(255,255,255,.28);
+      border-color:rgba(255,255,255,.45);
+    }
+    body.medical .day-btn{
+      background:rgba(255,255,255,.70);
+      color:#102014;
+      border:1px solid rgba(16,32,20,.18);
+    }
+    body.medical .day-btn.active{
+      background:rgba(255,255,255,.95);
+      border-color:rgba(16,32,20,.25);
     }
 
     .sound-toggle{
@@ -257,40 +292,6 @@
     .hint{ margin-top:10px; font-size:12.5px; color:#374151; line-height:1.45; }
     .hint code{ background:rgba(0,0,0,.06); padding:2px 6px; border-radius:8px; }
 
-    .day-switch{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:center;
-      margin-top:12px;
-    }
-    .day-btn{
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.25);
-      background:rgba(255,255,255,.10);
-      color:#fff;
-      cursor:pointer;
-      font-weight:800;
-      font-size:13px;
-      transition:transform .15s ease, background .15s ease;
-      user-select:none;
-    }
-    .day-btn:hover{ transform:translateY(-1px); background:rgba(255,255,255,.16); }
-    .day-btn.active{
-      background:rgba(255,255,255,.28);
-      border-color:rgba(255,255,255,.45);
-    }
-    body.medical .day-btn{
-      background:rgba(255,255,255,.70);
-      color:#102014;
-      border:1px solid rgba(16,32,20,.18);
-    }
-    body.medical .day-btn.active{
-      background:rgba(255,255,255,.95);
-      border-color:rgba(16,32,20,.25);
-    }
-
     .small-pill{
       display:inline-flex;
       gap:8px;
@@ -385,6 +386,9 @@
     </div>
   </div>
 
+  <!-- Sound ist ausgelagert -->
+  <script src="sound.js"></script>
+
   <script>
     // =========================================================
     // 1) Plan-Laden (GitHub Pages): plans/mon.js ... plans/sun.js
@@ -457,7 +461,6 @@
       if (status) status.textContent = `Plan: ${label}`;
     }
 
-    // --- Day Switch (neu, sauber, robust) ---
     function initDaySwitch(){
       const wrap = document.getElementById("daySwitch");
       if (!wrap) return;
@@ -467,12 +470,11 @@
       const setActiveButtons = () => {
         const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
         btns.forEach(b => b.classList.remove("active"));
-        const activeKey = saved === "auto" ? "auto" : saved;
+        const activeKey = (saved === "auto") ? "auto" : saved;
         const el = wrap.querySelector(`.day-btn[data-day="${activeKey}"]`);
         if (el) el.classList.add("active");
       };
 
-      // Listener nur einmal binden (Marker am Element)
       btns.forEach(btn => {
         if (btn.dataset.bound === "1") return;
         btn.dataset.bound = "1";
@@ -485,7 +487,8 @@
             localStorage.removeItem(MANUAL_UNTIL_KEY);
           } else {
             localStorage.setItem(DAY_OVERRIDE_KEY, key);
-            localStorage.setItem(MANUAL_UNTIL_KEY, String(Date.now() + 60000)); // 1 Minute
+            // Auto stellt sich nach 1 Minute wieder ein
+            localStorage.setItem(MANUAL_UNTIL_KEY, String(Date.now() + 60000));
           }
 
           setActiveButtons();
@@ -529,8 +532,7 @@
     const OFFSET_KEY = "scheduleOffsetMin";
     const ANCHOR_KEY = "scheduleAnchorTime";
     const APPLY_ALL_KEY = "scheduleOffsetApplyAllDay";
-
-    const AFTERNOON_KEY = "scheduleAfternoonOffsetMin"; // ab 12:00
+    const AFTERNOON_KEY = "scheduleAfternoonOffsetMin";
 
     let offsetMinutes = 0;
     let afternoonOffsetMinutes = 0;
@@ -562,13 +564,13 @@
 
       let off = 0;
 
-      // Morgen-Offset:
-      if (applyAllDay || baseMin < cutoffMin){
+      // Morgen-Offset: (Haken an => alles, Haken aus => nur vor 12:00)
+      if (applyAllDay || baseMin < cutoffMin) {
         off += offsetMinutes;
       }
 
-      // Nachmittag-Shift:
-      if (baseMin >= cutoffMin){
+      // Nachmittag-Shift: ab 12:00 zusätzlich
+      if (baseMin >= cutoffMin) {
         off += afternoonOffsetMinutes;
       }
 
@@ -631,7 +633,6 @@
     function toggleApplyAllDay(){
       const el = document.getElementById("applyAllDay");
       saveApplyAllDay(el && el.checked);
-
       lastNotifiedIndex = -1;
       updateTimeline();
       updateNextItem();
@@ -819,43 +820,8 @@
       }
     }
 
-    function playSound(){
-      try{
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioContext.state === "suspended") audioContext.resume();
-
-        const VOLUME = 0.35;
-
-        const osc1 = audioContext.createOscillator();
-        const g1 = audioContext.createGain();
-        osc1.connect(g1);
-        g1.connect(audioContext.destination);
-        osc1.frequency.value = 800;
-        osc1.type = "sine";
-        g1.gain.setValueAtTime(VOLUME, audioContext.currentTime);
-        g1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.30);
-        osc1.start(audioContext.currentTime);
-        osc1.stop(audioContext.currentTime + 0.30);
-
-        setTimeout(() => {
-          const osc2 = audioContext.createOscillator();
-          const g2 = audioContext.createGain();
-          osc2.connect(g2);
-          g2.connect(audioContext.destination);
-          osc2.frequency.value = 600;
-          osc2.type = "sine";
-          g2.gain.setValueAtTime(VOLUME, audioContext.currentTime);
-          g2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.40);
-          osc2.start(audioContext.currentTime);
-          osc2.stop(audioContext.currentTime + 0.40);
-        }, 200);
-      } catch(e){
-        console.error("Sound-Fehler:", e);
-      }
-    }
-
     function sendNotification(item){
-      if (soundEnabled) playSound();
+      if (soundEnabled && window.Sound) window.Sound.play();
       const effTime = getEffectiveItemTimeStr(item);
 
       const n = new Notification("🍽️ Tagesplan Erinnerung", {
@@ -885,7 +851,7 @@
       if (!("Notification" in window)) return;
 
       if (Notification.permission === "granted"){
-        if (soundEnabled) playSound();
+        if (soundEnabled && window.Sound) window.Sound.play();
         new Notification("🍽️ Test-Benachrichtigung", { body: "Die Benachrichtigungen funktionieren!" });
       } else if (Notification.permission === "denied"){
         alert("Benachrichtigungen wurden blockiert. Bitte aktiviere sie in den Browser-Einstellungen.");
@@ -898,13 +864,14 @@
       const el = document.getElementById("soundToggle");
       soundEnabled = !!(el && el.checked);
       localStorage.setItem("soundEnabled", String(soundEnabled));
+      if (window.Sound) window.Sound.setEnabled(soundEnabled);
 
       const label = document.querySelector('label[for="soundToggle"]');
       if (!label) return;
 
       if (soundEnabled){
         label.textContent = "🔊 Signalton aktiviert";
-        playSound();
+        if (window.Sound) window.Sound.play(); // kurzer Bestätigungston
       } else {
         label.textContent = "🔇 Signalton deaktiviert";
       }
@@ -937,8 +904,12 @@
         const t = document.getElementById("soundToggle");
         if (t) t.checked = soundEnabled;
 
+        if (window.Sound) window.Sound.setEnabled(soundEnabled);
+
         const label = document.querySelector('label[for="soundToggle"]');
         if (label) label.textContent = soundEnabled ? "🔊 Signalton aktiviert" : "🔇 Signalton deaktiviert";
+      } else {
+        if (window.Sound) window.Sound.setEnabled(true);
       }
     }
 
@@ -983,10 +954,14 @@
           localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
           localStorage.removeItem(MANUAL_UNTIL_KEY);
 
-          // UI sauber aktualisieren
-          initDaySwitch();
+          // Buttons aktiv setzen
+          const wrap = document.getElementById("daySwitch");
+          if (wrap) {
+            Array.from(wrap.querySelectorAll(".day-btn")).forEach(b => b.classList.remove("active"));
+            const autoBtn = wrap.querySelector(`.day-btn[data-day="auto"]`);
+            if (autoBtn) autoBtn.classList.add("active");
+          }
 
-          // Plan neu laden
           try{
             await loadPlanForCurrentSelection();
           } catch(e){
