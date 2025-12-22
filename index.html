@@ -636,9 +636,7 @@
     let lastNotifiedIndex = -1;
 
     function sendNotification(item){
-      // ✅ Sound wird hier ausgelöst (Terminauslösung)
-      playSound();
-
+      // Browser-Notification; der Signalton wird in checkForNotifications ausgelöst
       const effTime = getEffectiveItemTimeStr(item);
 
       if (("Notification" in window) && Notification.permission === "granted"){
@@ -669,15 +667,14 @@
       if (minutesUntil < -720) minutesUntil += 1440;
       if (minutesUntil < 0) minutesUntil += 1440;
 
-      // ✅ Auslösen: wenn <= 2 Minuten vor Termin
-      if (minutesUntil <= 2){
+      // ✅ Auslösen: genau 1 Minute vor Termin
+      if (minutesUntil === 1){
         if (soundEnabled){
-          // Sound immer, egal ob Notification erlaubt ist
           playSound();
         }
 
         if (canNotify){
-          sendNotification(nextItem); // (enthält playSound bereits, aber Sound ist oben schon gespielt)
+          sendNotification(nextItem);
         }
 
         lastNotifiedIndex = nextIndex;
