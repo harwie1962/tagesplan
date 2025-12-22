@@ -22,6 +22,6 @@ window.schedule = [
   { time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
   { time: "20:30", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 },
   { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 },
-  { time: "22:12", title: "Test ton", description: "", calories: 0 }
+  { time: "22:29", title: "Test ton", description: "", calories: 0 }
 ];
 
