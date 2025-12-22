@@ -255,11 +255,11 @@
   <script src="plan-utils.js"></script>
   <script>
     // =========================================================
-    // A) Sound (notify.mp3 im ROOT) + leiser + genau 1 Wiederholung
+    // A) Sound (notify.mp3 im ROOT) + leiser + keine Wiederholung
     // =========================================================
     const NOTIFY_MP3 = "notify.mp3";     // Datei liegt im Repo-Root
     const NOTIFY_VOL_DEFAULT = 0.35;     // 0.0 – 1.0
-    const NOTIFY_REPEAT_AFTER_FIRST = 1; // 1 = genau einmal wiederholen
+    const NOTIFY_REPEAT_AFTER_FIRST = 0; // 0 = keine Wiederholung
     const SOUND_ENABLED_KEY = "soundEnabled";
     const SOUND_VOLUME_KEY = "soundVolume";
 
@@ -338,7 +338,7 @@
 
       initAudio();
 
-      // pro Alarm neu setzen => genau 1 Wiederholung nach dem ersten Durchlauf
+      // pro Alarm neu setzen => keine Wiederholung nach dem Durchlauf
       repeatRemaining = NOTIFY_REPEAT_AFTER_FIRST;
 
       try{
@@ -704,8 +704,8 @@
       if (minutesUntil < -720) minutesUntil += 1440;
       if (minutesUntil < 0) minutesUntil += 1440;
 
-      // ✅ Auslösen: genau 1 Minute vor Termin
-      if (minutesUntil === 1){
+      // ✅ Auslösen: genau 2 Minuten vor Termin
+      if (minutesUntil === 2){
         if (soundEnabled){
           playSound();
         }
