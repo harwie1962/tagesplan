@@ -239,6 +239,7 @@
     </div>
   </div>
 
+  <script src="plan-utils.js"></script>
   <script>
     // =========================================================
     // A) Sound (notify.mp3 im ROOT) + leiser + genau 1 Wiederholung
@@ -387,50 +388,39 @@
     let afternoonOffsetMinutes = 0;
     let applyAllDay = false;
 
-    function getTimeInMinutes(timeStr){
-      const [h,m] = timeStr.split(":").map(Number);
-      return h*60 + m;
-    }
-
-    function minutesToHHMM(totalMinutes){
-      const mod = ((totalMinutes % 1440) + 1440) % 1440;
-      const h = String(Math.floor(mod/60)).padStart(2,"0");
-      const m = String(mod%60).padStart(2,"0");
-      return `${h}:${m}`;
-    }
+    const {
+      getTimeInMinutes,
+      minutesToHHMM,
+      getPerItemOffset: computePerItemOffset,
+      getEffectiveItemMinutes: computeEffectiveItemMinutes,
+      getEffectiveItemTimeStr: computeEffectiveItemTimeStr,
+      findCurrentAndNext: computeCurrentAndNext
+    } = PlanUtils;
 
     function getCurrentMinutes(){
       const now = new Date();
       return now.getHours()*60 + now.getMinutes();
     }
 
+    function buildPlanOptions(){
+      return {
+        offsetMinutes,
+        afternoonOffsetMinutes,
+        applyAllDay,
+        morningCutoff: MORNING_CUTOFF
+      };
+    }
+
     function getPerItemOffset(item){
-      const baseMin = getTimeInMinutes(item.time);
-      const cutoffMin = getTimeInMinutes(MORNING_CUTOFF);
-
-      let off = 0;
-
-      // Morgen-Offset
-      if (applyAllDay || baseMin < cutoffMin){
-        off += offsetMinutes;
-      }
-
-      // Nachmittag-Shift
-      if (baseMin >= cutoffMin){
-        off += afternoonOffsetMinutes;
-      }
-
-      return off;
+      return computePerItemOffset(item, buildPlanOptions());
     }
 
     function getEffectiveItemMinutes(item){
-      const perOffset = getPerItemOffset(item);
-      return ((getTimeInMinutes(item.time) + perOffset) % 1440 + 1440) % 1440;
+      return computeEffectiveItemMinutes(item, buildPlanOptions());
     }
 
     function getEffectiveItemTimeStr(item){
-      const perOffset = getPerItemOffset(item);
-      return minutesToHHMM(getTimeInMinutes(item.time) + perOffset);
+      return computeEffectiveItemTimeStr(item, buildPlanOptions());
     }
 
     function saveOffset(mins, anchorTimeStr){
@@ -527,25 +517,7 @@
     }
 
     function findCurrentAndNext(){
-      const currentMinutes = getCurrentMinutes();
-
-      const indexed = schedule.map((item, index) => ({
-        item, index,
-        eff: getEffectiveItemMinutes(item)
-      }));
-
-      indexed.sort((a,b) => a.eff - b.eff);
-
-      const next = indexed.find(x => x.eff > currentMinutes);
-      const nextIndex = next ? next.index : -1;
-
-      let currentSortedPos = -1;
-      for (let i=0;i<indexed.length;i++){
-        if (indexed[i].eff <= currentMinutes) currentSortedPos = i;
-      }
-      const currentIndex = currentSortedPos >= 0 ? indexed[currentSortedPos].index : -1;
-
-      return { currentIndex, nextIndex, sorted:indexed };
+      return computeCurrentAndNext(schedule, getCurrentMinutes(), buildPlanOptions());
     }
 
     function updateTimeline(){
