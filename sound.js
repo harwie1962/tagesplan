@@ -270,23 +270,53 @@ window.Sound = (function () {
     osc.stop(start + ev.d + 0.02);
   }
 
-  function play() {
-    if (!enabled) return;
+let playTimer = null;
+let playStart = 0;
+let playIndex = SCORE.map(() => 0);
 
-    try {
-      const audioContext = getCtx();
+function play() {
+  if (!enabled) return;
 
-      for (let i = 0; i < SCORE.length; i++) {
-        const voice = SCORE[i];
-        const settings = VOICES[i] || { volume: 0.25, pan: 0 };
-        for (const ev of voice) {
-          scheduleOne(audioContext, ev, settings);
-        }
+  const ctx = getCtx();
+  if (ctx.state === "suspended") ctx.resume();
+
+  // Reset
+  playIndex = SCORE.map(() => 0);
+  playStart = ctx.currentTime + 0.08;
+
+  const LOOKAHEAD = 0.25; // Sekunden
+  const TICK = 30;        // ms
+
+  function tick() {
+    const now = ctx.currentTime;
+
+    for (let v = 0; v < SCORE.length; v++) {
+      const voice = SCORE[v];
+      const settings = VOICES[v] || { volume: 0.25, pan: 0 };
+
+      while (playIndex[v] < voice.length) {
+        const ev = voice[playIndex[v]];
+        const absTime = playStart + ev.t;
+
+        if (absTime > now + LOOKAHEAD) break;
+
+        scheduleOne(ctx, ev, settings);
+        playIndex[v]++;
       }
-    } catch (e) {
-      console.error("Sound-Fehler:", e);
+    }
+
+    const done = playIndex.every((idx, i) => idx >= SCORE[i].length);
+    if (done) {
+      clearInterval(playTimer);
+      playTimer = null;
     }
   }
+
+  if (playTimer) clearInterval(playTimer);
+  playTimer = setInterval(tick, TICK);
+  tick();
+}
+
 
   return { play, setEnabled, isEnabled };
 })();
