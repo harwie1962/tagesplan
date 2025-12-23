@@ -275,6 +275,18 @@
     .panel h3{ margin-bottom:10px; color:#0b1220; font-size:15px; }
     body.medical .panel{ background:#fff; }
     body.medical .panel h3{ color:#1b5e20; }
+    .panel-top{
+      margin-bottom:16px;
+      background:#f8fafc;
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow:0 10px 28px rgba(2,6,23,.25);
+      text-align:left;
+    }
+    body.medical .panel-top{
+      background:#fff;
+      border:0;
+      box-shadow:0 12px 30px rgba(46,125,50,.32);
+    }
 
     .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:10px; }
     .row:first-of-type{ margin-top:0; }
@@ -303,12 +315,70 @@
       font-weight:800;
       font-size:13px;
     }
+
+    .calorie-summary{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:0 0 18px;
+    }
+    .calorie-pill{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:12px;
+      background:linear-gradient(135deg,#0ea5e9 0%, #8b5cf6 55%, #22c55e 110%);
+      color:#fff;
+      font-weight:800;
+      box-shadow:0 10px 24px rgba(2,6,23,.18);
+    }
+    body.medical .calorie-pill{
+      background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);
+      box-shadow:none;
+    }
+    .calorie-label{ opacity:.85; font-weight:700; letter-spacing:.2px; }
+    .calorie-value{ font-size:16px; }
   </style>
 </head>
 
 <body>
   <div class="container">
     <div class="header">
+      <div class="panel panel-top">
+        <h3>⏱️ Verschlafen-Modus (Zeitversatz)</h3>
+
+        <div class="row">
+          <label for="anchorTime">Ich bin aufgestanden um</label>
+          <input type="time" id="anchorTime" placeholder="07:30" />
+          <button class="btn btn-primary" onclick="applyOffsetFromAnchor()">Offset setzen</button>
+          <button class="btn btn-secondary" onclick="resetOffset()">Offset zurücksetzen</button>
+        </div>
+
+        <div class="row">
+          <input type="checkbox" id="applyAllDay" onchange="toggleApplyAllDay()" />
+          <label for="applyAllDay" style="cursor:pointer;">
+            Offset auf <strong>alle</strong> Zeiten anwenden (sonst nur morgens bis 12:00)
+          </label>
+        </div>
+
+        <div class="row" style="align-items:center;">
+          <span class="small-pill" title="Verschiebt Termine AB 12:00 (Mittag + alles danach)">
+            🌙 Nachmittag (ab 12:00): <span id="afternoonLabel">0 min</span>
+          </span>
+          <button class="btn btn-primary" onclick="shiftAfternoon(-15)">−15</button>
+          <button class="btn btn-primary" onclick="shiftAfternoon(+15)">+15</button>
+          <button class="btn btn-secondary" onclick="resetAfternoonShift()">Reset</button>
+        </div>
+
+        <div class="hint">
+          <div>• Standard: Morgen-Offset wirkt nur auf Zeiten <code>vor 12:00</code>.</div>
+          <div>• Haken an: Morgen-Offset wirkt auf <code>alle</code> Zeiten.</div>
+          <div>• Zusätzlich kannst du <strong>ab 12:00</strong> alles nach vorn/hinten schieben (−15 / +15).</div>
+          <div>• Speichert automatisch im Browser (localStorage).</div>
+        </div>
+      </div>
+
       <h1>🍽️ Dein Tagesplan</h1>
       <div class="current-time" id="currentTime">00:00:00</div>
       <div class="status" id="status">Lädt...</div>
@@ -339,40 +409,6 @@
         </button>
       </div>
 
-      <div class="panel">
-        <h3>⏱️ Verschlafen-Modus (Zeitversatz)</h3>
-
-        <div class="row">
-          <label for="anchorTime">Ich bin aufgestanden um</label>
-          <input type="time" id="anchorTime" />
-          <button class="btn btn-primary" onclick="applyOffsetFromAnchor()">Offset setzen</button>
-          <button class="btn btn-secondary" onclick="resetOffset()">Offset zurücksetzen</button>
-        </div>
-
-        <div class="row">
-          <input type="checkbox" id="applyAllDay" onchange="toggleApplyAllDay()" />
-          <label for="applyAllDay" style="cursor:pointer;">
-            Offset auf <strong>alle</strong> Zeiten anwenden (sonst nur morgens bis 12:00)
-          </label>
-        </div>
-
-        <div class="row" style="align-items:center;">
-          <span class="small-pill" title="Verschiebt Termine AB 12:00 (Mittag + alles danach)">
-            🌙 Nachmittag (ab 12:00): <span id="afternoonLabel">0 min</span>
-          </span>
-          <button class="btn btn-primary" onclick="shiftAfternoon(-15)">−15</button>
-          <button class="btn btn-primary" onclick="shiftAfternoon(+15)">+15</button>
-          <button class="btn btn-secondary" onclick="resetAfternoonShift()">Reset</button>
-        </div>
-
-        <div class="hint">
-          <div>• Standard: Morgen-Offset wirkt nur auf Zeiten <code>vor 12:00</code>.</div>
-          <div>• Haken an: Morgen-Offset wirkt auf <code>alle</code> Zeiten.</div>
-          <div>• Zusätzlich kannst du <strong>ab 12:00</strong> alles nach vorn/hinten schieben (−15 / +15).</div>
-          <div>• Speichert automatisch im Browser (localStorage).</div>
-        </div>
-      </div>
-
       <div class="controls">
         <button class="btn btn-primary" onclick="toggleTheme()">🎨 Design wechseln</button>
         <button class="btn btn-primary" onclick="testNotification()">🔔 Test-Benachrichtigung</button>
@@ -380,6 +416,7 @@
       </div>
 
       <div id="nextItem"></div>
+      <div class="calorie-summary" id="calorieSummary"></div>
 
       <h3 style="margin-bottom:18px;color:#111827;">📋 Tagesübersicht</h3>
       <div class="timeline" id="timeline"></div>
@@ -400,6 +437,23 @@
     const DAY_OVERRIDE_KEY = "scheduleDayOverride"; // "auto" oder "mon".."sun"
     const MANUAL_UNTIL_KEY = "scheduleManualUntilTs";
 
+    function applyManualDayTimeout(){
+      const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
+      const until = parseInt(localStorage.getItem(MANUAL_UNTIL_KEY) || "0", 10);
+      const expired = saved !== "auto" && (until <= 0 || Date.now() >= until);
+
+      if (expired){
+        localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
+        localStorage.removeItem(MANUAL_UNTIL_KEY);
+      }
+      return expired;
+    }
+
+    function getStoredDayOverride(){
+      applyManualDayTimeout();
+      return (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
+    }
+
     function getTodayKey(){
       return DAY_MAP[new Date().getDay()];
     }
@@ -411,7 +465,7 @@
       if (DAY_MAP.includes(q)) return q;
 
       // 2) localStorage override
-      const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
+      const saved = getStoredDayOverride();
       if (saved === "auto") return getTodayKey();
       if (DAY_MAP.includes(saved)) return saved;
 
@@ -451,14 +505,28 @@
       setStatusPlanInfo();
       updateTimeline();
       updateNextItem();
+      updateCalorieSummary();
     }
 
     function setStatusPlanInfo(){
-      const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
+      const saved = getStoredDayOverride();
       const effective = getSelectedDayKey();
       const label = (saved === "auto" ? `AUTO (${effective.toUpperCase()})` : saved.toUpperCase());
       const status = document.getElementById("status");
       if (status) status.textContent = `Plan: ${label}`;
+    }
+
+    function syncDayButtonState(){
+      const wrap = document.getElementById("daySwitch");
+      if (!wrap) return;
+
+      const btns = Array.from(wrap.querySelectorAll(".day-btn"));
+      const saved = getStoredDayOverride();
+
+      btns.forEach(b => b.classList.remove("active"));
+      const activeKey = (saved === "auto") ? "auto" : saved;
+      const el = wrap.querySelector(`.day-btn[data-day="${activeKey}"]`);
+      if (el) el.classList.add("active");
     }
 
     function initDaySwitch(){
@@ -466,14 +534,6 @@
       if (!wrap) return;
 
       const btns = Array.from(wrap.querySelectorAll(".day-btn"));
-
-      const setActiveButtons = () => {
-        const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
-        btns.forEach(b => b.classList.remove("active"));
-        const activeKey = (saved === "auto") ? "auto" : saved;
-        const el = wrap.querySelector(`.day-btn[data-day="${activeKey}"]`);
-        if (el) el.classList.add("active");
-      };
 
       btns.forEach(btn => {
         if (btn.dataset.bound === "1") return;
@@ -491,7 +551,7 @@
             localStorage.setItem(MANUAL_UNTIL_KEY, String(Date.now() + 60000));
           }
 
-          setActiveButtons();
+          syncDayButtonState();
 
           try{
             await loadPlanForCurrentSelection();
@@ -501,7 +561,7 @@
         });
       });
 
-      setActiveButtons();
+      syncDayButtonState();
     }
 
     function showPlanError(e){
@@ -636,6 +696,7 @@
       lastNotifiedIndex = -1;
       updateTimeline();
       updateNextItem();
+      updateCalorieSummary();
     }
 
     function applyOffsetFromAnchor(){
@@ -651,6 +712,7 @@
       lastNotifiedIndex = -1;
       updateTimeline();
       updateNextItem();
+      updateCalorieSummary();
     }
 
     function resetOffset(){
@@ -663,6 +725,7 @@
       lastNotifiedIndex = -1;
       updateTimeline();
       updateNextItem();
+      updateCalorieSummary();
     }
 
     function shiftAfternoon(delta){
@@ -670,6 +733,7 @@
       lastNotifiedIndex = -1;
       updateTimeline();
       updateNextItem();
+      updateCalorieSummary();
     }
 
     function resetAfternoonShift(){
@@ -677,6 +741,7 @@
       lastNotifiedIndex = -1;
       updateTimeline();
       updateNextItem();
+      updateCalorieSummary();
     }
 
     // =========================================================
@@ -791,6 +856,56 @@
             ${nextItem.description ? `${nextItem.description}<br>` : ""}
             ${nextItem.calories > 0 ? `<br>📊 ${nextItem.calories} kcal` : ""}
           </div>
+        </div>
+      `;
+    }
+
+    function calculateCalorieTotals(){
+      if (!Array.isArray(schedule) || !schedule.length) return null;
+
+      const total = schedule.reduce((sum, item) => sum + (parseInt(item.calories, 10) || 0), 0);
+      const currentMinutes = getCurrentMinutes();
+
+      const sorted = schedule
+        .map(item => ({ item, eff: getEffectiveItemMinutes(item) }))
+        .sort((a, b) => a.eff - b.eff);
+
+      const completed = sorted.reduce((sum, entry) => {
+        const kcal = parseInt(entry.item.calories, 10) || 0;
+        return entry.eff <= currentMinutes ? sum + kcal : sum;
+      }, 0);
+
+      const remaining = Math.max(total - completed, 0);
+      return { total, completed, remaining };
+    }
+
+    function updateCalorieSummary(){
+      const summary = document.getElementById("calorieSummary");
+      if (!summary) return;
+
+      if (!Array.isArray(schedule) || !schedule.length){
+        summary.innerHTML = "";
+        return;
+      }
+
+      const totals = calculateCalorieTotals();
+      if (!totals){
+        summary.innerHTML = "";
+        return;
+      }
+
+      summary.innerHTML = `
+        <div class="calorie-pill">
+          <span class="calorie-label">Gesamt</span>
+          <span class="calorie-value">${totals.total} kcal</span>
+        </div>
+        <div class="calorie-pill">
+          <span class="calorie-label">Erledigt</span>
+          <span class="calorie-value">${totals.completed} kcal</span>
+        </div>
+        <div class="calorie-pill">
+          <span class="calorie-label">Offen</span>
+          <span class="calorie-value">${totals.remaining} kcal</span>
         </div>
       `;
     }
@@ -930,7 +1045,10 @@
       loadSoundPreference();
       loadOffset();
       initDaySwitch();
+      const resetOnLoad = applyManualDayTimeout();
+      if (resetOnLoad) syncDayButtonState();
       updateTime();
+      updateCalorieSummary();
 
       if (("Notification" in window) && Notification.permission === "default"){
         const a = document.getElementById("notificationAlert");
@@ -947,29 +1065,22 @@
         updateTime();
 
         // Auto-Reset prüfen (manueller Tag läuft nach 1 Minute aus)
-        const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
-        const until = parseInt(localStorage.getItem(MANUAL_UNTIL_KEY) || "0", 10);
+        const wasResetToAuto = applyManualDayTimeout();
 
-        if (saved !== "auto" && until > 0 && Date.now() >= until) {
-          localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
-          localStorage.removeItem(MANUAL_UNTIL_KEY);
-
-          // Buttons aktiv setzen
-          const wrap = document.getElementById("daySwitch");
-          if (wrap) {
-            Array.from(wrap.querySelectorAll(".day-btn")).forEach(b => b.classList.remove("active"));
-            const autoBtn = wrap.querySelector(`.day-btn[data-day="auto"]`);
-            if (autoBtn) autoBtn.classList.add("active");
-          }
+        if (wasResetToAuto) {
+          syncDayButtonState();
 
           try{
             await loadPlanForCurrentSelection();
           } catch(e){
             showPlanError(e);
           }
+
+          setStatusPlanInfo();
         }
 
         updateNextItem();
+        updateCalorieSummary();
         checkForNotifications();
         if (!isScrolling) updateTimeline();
       }, 10000);
