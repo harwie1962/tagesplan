@@ -1,71 +1,198 @@
-// assets/sound.js
-// Acer-Pad: ultra-einfach, SOLO, max. 1 Takt (4/4), keine Mehrstimmigkeit.
-
+// sound.js  (generiert)
 window.Sound = (function () {
   let enabled = true;
 
   function setEnabled(v) { enabled = !!v; }
   function isEnabled() { return enabled; }
 
-  // AudioContext wiederverwenden
-  let ctx = null;
-  function getCtx() {
-    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (ctx.state === "suspended") ctx.resume();
-    return ctx;
+  // Eventliste: n = Note (z.B. "C4"), s16 = Start in 1/16, d16 = Dauer in 1/16, v = Velocity (0..1)
+  const EVENTS = [
+  {
+    "n": "F#3",
+    "s16": 0,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "F#4",
+    "s16": 2,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "Bb4",
+    "s16": 5,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "C#5",
+    "s16": 7,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "Bb5",
+    "s16": 10,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "F#3",
+    "s16": 12,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "F#4",
+    "s16": 15,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "Bb4",
+    "s16": 17,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "C#5",
+    "s16": 20,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "Bb5",
+    "s16": 22,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "F#3",
+    "s16": 25,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "Bb3",
+    "s16": 29,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "C#4",
+    "s16": 32,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "F4",
+    "s16": 34,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "F5",
+    "s16": 37,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "Bb3",
+    "s16": 39,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "C#4",
+    "s16": 42,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "F4",
+    "s16": 44,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "F5",
+    "s16": 47,
+    "d16": 2,
+    "v": 1
+  },
+  {
+    "n": "Bb3",
+    "s16": 49,
+    "d16": 9,
+    "v": 1
   }
+];
+
+  function noteToMidi(n) {
+    n = String(n || "C4").trim();
+    const m = n.match(/^([A-Ga-g])([#b]?)(-?\d+)$/);
+    if (!m) return 60;
+    const letter = m[1].toUpperCase();
+    const acc = m[2] || "";
+    const oct = parseInt(m[3], 10);
+    const base = {C:0, D:2, E:4, F:5, G:7, A:9, B:11}[letter];
+    let sem = base;
+    if (acc === "#") sem += 1;
+    if (acc === "b") sem -= 1;
+    return (oct + 1) * 12 + sem;
+  }
+
+  function midiToFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
 
   function play() {
     if (!enabled) return;
 
     try {
-      const audioContext = getCtx();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
 
-      const TYPE = "triangle";
-      const VOLUME = 0.35;
+      const ctx = new AudioCtx();
+      if (ctx.state === "suspended") ctx.resume();
 
-      // 1 Takt bei 94 BPM (4/4)
-      const BPM = 94;
+      const BPM = 149;
       const QUARTER = 60 / BPM;
-      const EIGHTH = QUARTER / 2;
+      const SIXTEENTH = QUARTER / 4;
 
-      // SOLO-Melodie (Es-Dur): G4 F4 G4 Ab4 Bb4 C5 D5 Eb5  (8x Achtel = 1 Takt)
-      const sequence = [
-        { f: 392.00, d: EIGHTH }, // G4
-        { f: 349.23, d: EIGHTH }, // F4
-        { f: 392.00, d: EIGHTH }, // G4
-        { f: 415.30, d: EIGHTH }, // Ab4
-        { f: 466.16, d: EIGHTH }, // Bb4
-        { f: 523.25, d: EIGHTH }, // C5
-        { f: 587.33, d: EIGHTH }, // D5
-        { f: 622.25, d: EIGHTH }, // Eb5
-      ];
+      const VOLUME = 0.61;
+      const TYPE = "triangle";
 
-      let t = audioContext.currentTime + 0.05;
+      const now = ctx.currentTime + 0.02;
 
-      for (const step of sequence) {
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
+      for (let i = 0; i < EVENTS.length; i++) {
+        const e = EVENTS[i];
+        if (!e || !e.n) continue;
 
-        osc.type = TYPE;
-        osc.frequency.value = step.f;
+        const t0 = now + (e.s16 * SIXTEENTH);
+        const dur = Math.max(0.03, (e.d16 * SIXTEENTH));
 
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
 
-        // sehr einfache Hüllkurve (stabil auf schwacher Hardware)
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(VOLUME, t + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + step.d);
+        o.type = TYPE;
+        o.frequency.value = midiToFreq(noteToMidi(e.n));
 
-        osc.start(t);
-        osc.stop(t + step.d + 0.02);
+        o.connect(g);
+        g.connect(ctx.destination);
 
-        t += step.d;
+        const v = Math.max(0.0002, VOLUME * (typeof e.v === "number" ? e.v : 0.9));
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(v, t0 + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(0.02, dur - 0.01));
+
+        o.start(t0);
+        o.stop(t0 + dur);
       }
-    } catch (e) {
-      console.error("Sound-Fehler:", e);
-    }
+
+      const last = EVENTS.reduce((mx, e) => Math.max(mx, (e.s16 + e.d16) * SIXTEENTH), 0);
+      setTimeout(() => { try { ctx.close(); } catch(e){} }, (last + 0.2) * 1000);
+
+    } catch (e) { }
   }
 
   return { play, setEnabled, isEnabled };
