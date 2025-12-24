@@ -24,6 +24,11 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
+    body.low-power{
+      background:#0b1220;
+      transition:none;
+    }
+
     body.medical{
       background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%);
       color:#102014;
@@ -37,6 +42,10 @@
       box-shadow:0 14px 40px rgba(0,0,0,.28);
       overflow:hidden;
       border:1px solid rgba(255,255,255,.10);
+    }
+    body.low-power .container{
+      box-shadow:none;
+      border:1px solid rgba(255,255,255,.12);
     }
     body.medical .container{
       background:#fff;
@@ -55,6 +64,10 @@
       transition:background .5s ease;
       border-bottom:1px solid rgba(255,255,255,.10);
     }
+    body.low-power .header{
+      background:#101a33;
+      transition:none;
+    }
     body.medical .header{
       background:linear-gradient(135deg,#2e7d32 0%,#1b5e20 100%);
       border-bottom:0;
@@ -72,6 +85,7 @@
       margin:18px 0 12px;
       text-shadow:2px 2px 8px rgba(0,0,0,.35);
     }
+    body.low-power .current-time{ text-shadow:none; }
 
     .status{
       font-size:15px;
@@ -101,6 +115,7 @@
       transition:transform .15s ease, background .15s ease;
       user-select:none;
     }
+    body.low-power .day-btn{ transition:none; }
     .day-btn:hover{ transform:translateY(-1px); background:rgba(255,255,255,.16); }
     .day-btn.active{
       background:rgba(255,255,255,.28);
@@ -145,6 +160,10 @@
       box-shadow:0 14px 36px rgba(0,0,0,.25);
       border:1px solid rgba(255,255,255,.10);
     }
+    body.low-power .next-item{
+      background:#1e293b;
+      box-shadow:none;
+    }
     body.medical .next-item{
       background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);
       box-shadow:0 10px 30px rgba(76,175,80,.3);
@@ -167,6 +186,7 @@
       background:linear-gradient(180deg, rgba(110,231,255,.85) 0%, rgba(167,139,250,.85) 55%, rgba(34,197,94,.65) 100%);
       border-radius:3px;
     }
+    body.low-power .timeline::before{ background:#60a5fa; }
     body.medical .timeline::before{
       background:linear-gradient(180deg,#66bb6a 0%,#388e3c 100%);
     }
@@ -180,6 +200,7 @@
       border-radius:12px;
       transition:background .2s ease;
     }
+    body.low-power .timeline-item{ transition:none; }
     .timeline-item::before{
       content:"";
       position:absolute;
@@ -202,6 +223,10 @@
       box-shadow:0 10px 22px rgba(2,6,23,.12);
       border-color:rgba(110,231,255,.35);
     }
+    body.low-power .timeline-item.current{
+      background:#e2e8f0;
+      box-shadow:none;
+    }
     body.medical .timeline-item.current{
       background:linear-gradient(135deg,#c8e6c9 0%,#a5d6a7 100%);
       box-shadow:0 5px 15px rgba(165,214,167,.4);
@@ -212,6 +237,7 @@
       border-color:rgba(110,231,255,.95);
       animation:pulse 2s infinite;
     }
+    body.low-power .timeline-item.current::before{ animation:none; }
     body.medical .timeline-item.current::before{
       background:#2e7d32;
       border-color:#2e7d32;
@@ -257,6 +283,7 @@
       font-weight:800;
       letter-spacing:.1px;
     }
+    body.low-power .btn{ transition:none; }
     .btn-primary{
       background:linear-gradient(135deg,#0ea5e9 0%, #8b5cf6 55%, #22c55e 110%);
       color:#fff;
@@ -302,6 +329,7 @@
       box-shadow:0 10px 28px rgba(2,6,23,.25);
       text-align:left;
     }
+    body.low-power .panel-top{ box-shadow:none; }
     body.medical .panel-top{
       background:#fff;
       border:0;
@@ -374,12 +402,20 @@
       font-weight:800;
       box-shadow:0 10px 24px rgba(2,6,23,.18);
     }
+    body.low-power .calorie-pill{
+      background:#1d4ed8;
+      box-shadow:none;
+    }
     body.medical .calorie-pill{
       background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);
       box-shadow:none;
     }
     .calorie-label{ opacity:.85; font-weight:700; letter-spacing:.2px; }
     .calorie-value{ font-size:16px; }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ animation:none !important; transition:none !important; }
+    }
   </style>
 </head>
 
@@ -479,10 +515,38 @@
     // =========================================================
 
     let schedule = [];
+    let scheduleDirty = true;
+    let scheduleVersion = 0;
+    let cachedSortedSchedule = [];
+    let lastTimelineState = "";
 
     const DAY_MAP = ["sun","mon","tue","wed","thu","fri","sat"];
     const DAY_OVERRIDE_KEY = "scheduleDayOverride"; // "auto" oder "mon".."sun"
     const MANUAL_UNTIL_KEY = "scheduleManualUntilTs";
+    const LOW_POWER_KEY = "scheduleLowPower";
+
+    function detectLowPowerDevice(){
+      const mem = navigator.deviceMemory || 0;
+      const cores = navigator.hardwareConcurrency || 0;
+      return (mem && mem <= 2) || (cores && cores <= 4);
+    }
+
+    function detectReducedMotion(){
+      return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    }
+
+    function applyLowPowerMode(){
+      const saved = localStorage.getItem(LOW_POWER_KEY);
+      const shouldEnable = saved === null ? (detectLowPowerDevice() || detectReducedMotion()) : saved === "true";
+      localStorage.setItem(LOW_POWER_KEY, shouldEnable ? "true" : "false");
+      document.body.classList.toggle("low-power", shouldEnable);
+      return shouldEnable;
+    }
+
+    function markScheduleDirty(){
+      scheduleDirty = true;
+      scheduleVersion += 1;
+    }
 
     function applyManualDayTimeout(){
       const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
@@ -545,6 +609,7 @@
 
       if (Array.isArray(window.schedule) && window.schedule.length){
         schedule = window.schedule;
+        markScheduleDirty();
       } else {
         throw new Error("Plan-Datei geladen, aber window.schedule ist leer oder fehlt.");
       }
@@ -747,12 +812,14 @@
       offsetMinutes = mins;
       localStorage.setItem(OFFSET_KEY, String(mins));
       if (anchorTimeStr) localStorage.setItem(ANCHOR_KEY, anchorTimeStr);
+      markScheduleDirty();
     }
 
     function saveAfternoonOffset(mins){
       afternoonOffsetMinutes = mins;
       localStorage.setItem(AFTERNOON_KEY, String(mins));
       updateAfternoonLabel();
+      markScheduleDirty();
     }
 
     function updateAfternoonLabel(){
@@ -765,6 +832,7 @@
     function saveApplyAllDay(value){
       applyAllDay = !!value;
       localStorage.setItem(APPLY_ALL_KEY, applyAllDay ? "true" : "false");
+      markScheduleDirty();
     }
 
     function loadOffset(){
@@ -852,26 +920,37 @@
     function findCurrentAndNext(){
       const currentMinutes = getCurrentMinutes();
 
-      const indexed = schedule.map((item, index) => ({
-        item, index,
-        eff: getEffectiveItemMinutes(item)
-      }));
+      const sorted = getSortedSchedule();
 
-      indexed.sort((a,b) => a.eff - b.eff);
+      let nextIndex = -1;
+      let currentIndex = -1;
 
-      const next = indexed.find(x => x.eff > currentMinutes);
-      const nextIndex = next ? next.index : -1;
-
-      let currentSortedPos = -1;
-      for (let i=0;i<indexed.length;i++){
-        if (indexed[i].eff <= currentMinutes) currentSortedPos = i;
+      for (const entry of sorted){
+        if (entry.eff <= currentMinutes){
+          currentIndex = entry.index;
+        } else {
+          if (nextIndex === -1) nextIndex = entry.index;
+          break;
+        }
       }
-      const currentIndex = currentSortedPos >= 0 ? indexed[currentSortedPos].index : -1;
 
-      return { currentIndex, nextIndex, sorted:indexed };
+      return { currentIndex, nextIndex, sorted };
     }
 
-    function updateTimeline(){
+    function getSortedSchedule(){
+      if (!Array.isArray(schedule) || !schedule.length) return [];
+      if (!scheduleDirty && cachedSortedSchedule.length){
+        return cachedSortedSchedule;
+      }
+
+      cachedSortedSchedule = schedule
+        .map((item, index) => ({ item, index, eff: getEffectiveItemMinutes(item) }))
+        .sort((a, b) => a.eff - b.eff);
+      scheduleDirty = false;
+      return cachedSortedSchedule;
+    }
+
+    function updateTimeline(force = false){
       const timeline = document.getElementById("timeline");
       if (!timeline) return;
 
@@ -881,15 +960,23 @@
       }
 
       const { currentIndex, sorted } = findCurrentAndNext();
+      const ackKey = Array.from(acknowledgedItems).sort((a,b) => a-b).join(",");
+      const stateKey = `${scheduleVersion}|${currentIndex}|${ackKey}`;
+      if (!force && stateKey === lastTimelineState) return;
+      lastTimelineState = stateKey;
+
       timeline.innerHTML = "";
+
+      const positions = new Map();
+      sorted.forEach((entry, pos) => positions.set(entry.index, pos));
+      const currentPos = positions.get(currentIndex);
 
       sorted.forEach(({ item, index }) => {
         const div = document.createElement("div");
         div.className = "timeline-item";
         div.id = `item-${index}`;
 
-        const currentPos = sorted.findIndex(x => x.index === currentIndex);
-        const thisPos = sorted.findIndex(x => x.index === index);
+        const thisPos = positions.get(index);
 
         if (currentIndex !== -1 && thisPos < currentPos) div.classList.add("completed");
         if (index === currentIndex) div.classList.add("current");
@@ -1203,9 +1290,7 @@
       }
 
       const currentMinutes = getCurrentMinutes();
-      const sorted = schedule
-        .map((item, index) => ({ item, index, eff: getEffectiveItemMinutes(item) }))
-        .sort((a, b) => a.eff - b.eff);
+      const sorted = getSortedSchedule();
 
       const candidate = sorted.find(entry => {
         let minutesUntil = entry.eff - currentMinutes;
@@ -1232,6 +1317,7 @@
     // 5) Start
     // =========================================================
     async function start(){
+      const lowPowerEnabled = applyLowPowerMode();
       loadTheme();
       loadSoundPreference();
       initMuteToggle();
@@ -1252,6 +1338,7 @@
       } catch(e){
         showPlanError(e);
       }
+      const updateIntervalMs = lowPowerEnabled ? 20000 : 10000;
 
       setInterval(async () => {
         updateTime();
@@ -1276,7 +1363,7 @@
         checkForNotifications();
         checkForRepeatingAlarm();
         if (!isScrolling) updateTimeline();
-      }, 10000);
+      }, updateIntervalMs);
     }
 
     start();
