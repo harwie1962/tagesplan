@@ -398,6 +398,15 @@ window.Sound = (function () {
     return bars * 16;
   }
 
+  function getDurationMs() {
+    const BPM = 160;
+    const QUARTER = 60 / BPM;
+    const SIXTEENTH = QUARTER / 4;
+    const total16 = calcTotalSteps16();
+    const totalSec = (total16 * SIXTEENTH) + 0.2;
+    return Math.round(totalSec * 1000);
+  }
+
 function play() {
   if (!enabled) return;
 
@@ -476,5 +485,5 @@ function play() {
   } catch (e) { }
 }
 
-  return { play, setEnabled, isEnabled };
+  return { play, setEnabled, isEnabled, getDurationMs };
 })();

@@ -1162,7 +1162,17 @@
       if (!("Notification" in window)) return;
 
       if (Notification.permission === "granted"){
-        if (soundEnabled && window.Sound) window.Sound.play();
+        if (soundEnabled && window.Sound){
+          window.Sound.play();
+          const repeatDelay = typeof window.Sound.getDurationMs === "function"
+            ? window.Sound.getDurationMs()
+            : 0;
+          if (repeatDelay > 0){
+            setTimeout(() => {
+              if (soundEnabled && window.Sound) window.Sound.play();
+            }, repeatDelay);
+          }
+        }
         new Notification("🍽️ Test-Benachrichtigung", { body: "Die Benachrichtigungen funktionieren!" });
       } else if (Notification.permission === "denied"){
         alert("Benachrichtigungen wurden blockiert. Bitte aktiviere sie in den Browser-Einstellungen.");
