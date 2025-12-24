@@ -15,7 +15,7 @@ window.schedule = [
   { time: "12:30", title: "Hauptmahlzeit (gekocht, ggf. abgekühlt)", description: "Buchweizen-Bowl: Buchweizen (gekocht) 180–220 g, Gemüse 300 g, Hähnchenbrust 100–120 g, Olivenöl 1 TL", calories: 420 },
   { time: "13:00", title: "Artischocke", description: "Leber / Galle", calories: 0 },
 
-  { time: "15:30", title: "Kleine Kohlenhydratportion", description: "Haferflocken 30 g + Wasser oder Tee", calories: 115 },
+  { time: "13:12", title: "Kleine Kohlenhydratportion", description: "Haferflocken 30 g + Wasser oder Tee", calories: 115 },
   { time: "17:30", title: "L-Glutamin (2. Portion)", description: "3–5 g", calories: 0 },
 
   { time: "18:00", title: "Abendmedikamente", description: "Eliquis/Apixaban 5 mg + Rosuvastatin + Ramipril", calories: 0 },
