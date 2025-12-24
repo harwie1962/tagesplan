@@ -1534,7 +1534,7 @@ function play() {
     const QUARTER = 60 / BPM;
     const SIXTEENTH = QUARTER / 4;
 
-    const VOLUME = 0.35;
+    const VOLUME = 0.55;
     const TYPE = "sine";
 
     // >>> Stabilität bei Mehrstimmigkeit:
