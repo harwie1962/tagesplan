@@ -244,8 +244,32 @@
     }
     @keyframes pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
 
-    .timeline-item .time{ font-weight:800; color:#0b1220; font-size:16px; margin-bottom:6px; }
+    .timeline-item .time-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;
+    }
+    .timeline-item .time{ font-weight:800; color:#0b1220; font-size:16px; }
     body.medical .timeline-item .time{ color:#1b5e20; }
+    .timeline-item .scroll-top-btn{
+      border:none;
+      background:#e2e8f0;
+      color:#0b1220;
+      font-weight:800;
+      border-radius:999px;
+      padding:4px 10px;
+      font-size:12px;
+      cursor:pointer;
+      transition:transform .2s ease, background .2s ease;
+    }
+    .timeline-item .scroll-top-btn:hover{ transform:translateY(-1px); background:#cbd5f5; }
+    body.low-power .timeline-item .scroll-top-btn{ transition:none; }
+    body.medical .timeline-item .scroll-top-btn{
+      background:#e8f5e9;
+      color:#1b5e20;
+    }
     .timeline-item .description{ color:#111827; font-size:13.5px; line-height:1.5; }
     body.medical .timeline-item .description{ color:#102014; }
     .timeline-item .calories{ color:#2563eb; font-weight:800; margin-top:6px; font-size:12.5px; }
@@ -1330,7 +1354,10 @@
           }
 
           div.innerHTML =
-            '<div class="time">' + effTime + ' Uhr</div>' +
+            '<div class="time-row">' +
+              '<div class="time">' + effTime + ' Uhr</div>' +
+              '<button type="button" class="scroll-top-btn" aria-label="Nach oben">⬆ Nach oben</button>' +
+            '</div>' +
             '<div class="description">' +
               '<strong>' + item.title + '</strong>' +
               descExtra +
@@ -1347,9 +1374,25 @@
               setAcknowledged(index, checkbox.checked);
             });
           }
+          var topBtn = div.querySelector(".scroll-top-btn");
+          if (topBtn){
+            topBtn.addEventListener("click", function(){
+              scrollToTop();
+            });
+          }
           timeline.appendChild(div);
         })(sorted[i]);
       }
+    }
+
+    function scrollToTop(){
+      try{
+        if ("scrollBehavior" in document.documentElement.style){
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+      } catch (_) {}
+      window.scrollTo(0, 0);
     }
 
     function updateNextItem(){
