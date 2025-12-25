@@ -1,4 +1,4 @@
-<!-- index.html -->
+<!-- index.html (KitKat-sicher / ES5 / Audio-Unlock / Notification-Fallback / Sound eingebettet) -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -413,13 +413,28 @@
     .calorie-label{ opacity:.85; font-weight:700; letter-spacing:.2px; }
     .calorie-value{ font-size:16px; }
 
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      background:rgba(0,0,0,.82);
+      color:#fff;
+      padding:10px 14px;
+      border-radius:12px;
+      font-weight:800;
+      z-index:9999;
+      max-width:92%;
+      text-align:center;
+    }
+
     @media (prefers-reduced-motion: reduce){
       *{ animation:none !important; transition:none !important; }
     }
   </style>
 </head>
 
-  <body>
+<body>
   <div class="container">
     <div class="header">
       <details class="panel panel-top" id="offsetPanel" open>
@@ -493,6 +508,7 @@
       </div>
 
       <div class="controls">
+        <button class="btn btn-primary" id="audioUnlockBtn" onclick="unlockAudio()">🔓 Ton aktivieren</button>
         <button class="btn btn-primary" onclick="toggleTheme()">🎨 Design wechseln</button>
         <button class="btn btn-primary" onclick="testNotification()">🔔 Test-Benachrichtigung</button>
         <button class="btn btn-secondary" onclick="scrollToNext()">⬇️ Zum nächsten Punkt</button>
@@ -506,39 +522,302 @@
     </div>
   </div>
 
-  <!-- Sound ist ausgelagert -->
-  <script src="sound.js"></script>
+  <script>
+    // ==========================================
+    // Sound Engine (KitKat / ES5 safe) eingebettet
+    // ==========================================
+    window.Sound = (function () {
+      var enabled = true;
+      var mutedUntilTs = 0;
+
+      var ctx = null;
+      var master = null;
+      var unlocked = false;
+
+      function setEnabled(v) { enabled = !!v; }
+      function isEnabled() { return enabled; }
+
+      var EVENTS = [
+        {"n":"D4","s16":0,"d16":4,"v":0.8},
+        {"n":"F#4","s16":4,"d16":4,"v":0.82},
+        {"n":"A4","s16":8,"d16":4,"v":0.84},
+        {"n":"D5","s16":12,"d16":4,"v":0.86},
+        {"n":"C#5","s16":16,"d16":4,"v":0.82},
+        {"n":"B4","s16":20,"d16":4,"v":0.8},
+        {"n":"A4","s16":24,"d16":4,"v":0.78},
+        {"n":"G4","s16":28,"d16":4,"v":0.78}
+      ];
+
+      function noteToMidi(n) {
+        n = String(n || "C4").replace(/^\s+|\s+$/g, "");
+        var m = n.match(/^([A-Ga-g])([#b]?)(-?\d+)$/);
+        if (!m) return 60;
+        var letter = String(m[1]).toUpperCase();
+        var acc = m[2] || "";
+        var oct = parseInt(m[3], 10);
+        var baseMap = {C:0, D:2, E:4, F:5, G:7, A:9, B:11};
+        var sem = baseMap[letter];
+        if (acc === "#") sem += 1;
+        if (acc === "b") sem -= 1;
+        return (oct + 1) * 12 + sem;
+      }
+
+      function midiToFreq(m) {
+        return 440 * Math.pow(2, (m - 69) / 12);
+      }
+
+      function ensureCtx() {
+        if (ctx) return true;
+
+        var AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return false;
+
+        try {
+          ctx = new AudioCtx();
+          master = ctx.createGain();
+          master.gain.value = 1.0;
+          master.connect(ctx.destination);
+          return true;
+        } catch (e) {
+          ctx = null;
+          master = null;
+          return false;
+        }
+      }
+
+      function unlock() {
+        if (!ensureCtx()) return false;
+
+        try {
+          if (ctx.state === "suspended" && ctx.resume) ctx.resume();
+
+          var o = ctx.createOscillator();
+          var g = ctx.createGain();
+          o.type = "sine";
+          o.frequency.value = 440;
+          g.gain.value = 0.0001;
+          o.connect(g);
+          g.connect(master);
+
+          var t = ctx.currentTime + 0.01;
+          o.start(t);
+          o.stop(t + 0.02);
+
+          unlocked = true;
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function isMuted() {
+        return Date.now() < mutedUntilTs;
+      }
+
+      function muteForMs(ms) {
+        mutedUntilTs = Date.now() + Math.max(0, ms || 0);
+      }
+
+      function resetMute() {
+        mutedUntilTs = 0;
+      }
+
+      function calcTotalSteps16() {
+        var maxEnd = 0;
+        for (var i = 0; i < EVENTS.length; i++) {
+          var e = EVENTS[i];
+          if (!e) continue;
+          var end = (e.s16 || 0) + (e.d16 || 0);
+          if (end > maxEnd) maxEnd = end;
+        }
+        var bars = Math.max(1, Math.ceil(maxEnd / 16));
+        return bars * 16;
+      }
+
+      function getDurationMs() {
+        var BPM = 140;
+        var QUARTER = 60 / BPM;
+        var SIXTEENTH = QUARTER / 4;
+        var total16 = calcTotalSteps16();
+        var totalSec = (total16 * SIXTEENTH) + 0.2;
+        return Math.round(totalSec * 1000);
+      }
+
+      function play() {
+        if (!enabled) return;
+        if (isMuted()) return;
+        if (!ensureCtx()) return;
+        if (!unlocked) return;
+
+        try {
+          if (ctx.state === "suspended" && ctx.resume) ctx.resume();
+        } catch (_) {}
+
+        var BPM = 140;
+        var QUARTER = 60 / BPM;
+        var SIXTEENTH = QUARTER / 4;
+
+        var VOLUME = 0.45;
+        var TYPE = "sine";
+        var MAX_VOICES = 3;
+
+        var now = ctx.currentTime + 0.03;
+
+        var sorted = EVENTS.slice().sort(function (a, b) {
+          var da = (a && a.s16) || 0;
+          var db = (b && b.s16) || 0;
+          if (da !== db) return da - db;
+          return noteToMidi(a.n) - noteToMidi(b.n);
+        });
+
+        var active = [];
+
+        for (var i2 = 0; i2 < sorted.length; i2++) {
+          var ev = sorted[i2];
+          if (!ev || !ev.n) continue;
+
+          var t0 = now + ((ev.s16 || 0) * SIXTEENTH);
+          var dur = Math.max(0.05, ((ev.d16 || 1) * SIXTEENTH));
+          var stopAt = t0 + dur;
+
+          for (var k = active.length - 1; k >= 0; k--) {
+            if (active[k].stopAt <= t0) active.splice(k, 1);
+          }
+
+          if (active.length >= MAX_VOICES) {
+            var victim = active.shift();
+            try { victim.osc.stop(t0); } catch (_) {}
+          }
+
+          var o2 = ctx.createOscillator();
+          var g2 = ctx.createGain();
+
+          o2.type = TYPE;
+          o2.frequency.value = midiToFreq(noteToMidi(ev.n));
+
+          o2.connect(g2);
+          g2.connect(master);
+
+          var vel = (typeof ev.v === "number") ? ev.v : 0.9;
+          var v = Math.max(0.0002, VOLUME * vel);
+
+          g2.gain.setValueAtTime(0.0001, t0);
+          g2.gain.exponentialRampToValueAtTime(v, t0 + 0.02);
+          g2.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(0.04, dur - 0.02));
+
+          o2.start(t0);
+          o2.stop(stopAt);
+
+          active.push({ osc: o2, stopAt: stopAt });
+        }
+      }
+
+      return {
+        play: play,
+        unlock: unlock,
+        setEnabled: setEnabled,
+        isEnabled: isEnabled,
+        muteForMs: muteForMs,
+        resetMute: resetMute,
+        getDurationMs: getDurationMs
+      };
+    })();
+  </script>
 
   <script>
+    // =========================
+    // Storage (sicher)
+    // =========================
+    function lsGet(k){
+      try { return localStorage.getItem(k); } catch(e){ return null; }
+    }
+    function lsSet(k,v){
+      try { localStorage.setItem(k, v); } catch(e){}
+    }
+    function lsRemove(k){
+      try { localStorage.removeItem(k); } catch(e){}
+    }
+
+    // =========================
+    // Toast (Fallback UI)
+    // =========================
+    var toastTimer = null;
+    function showToast(msg){
+      try{
+        var old = document.getElementById("toast");
+        if (old && old.parentNode) old.parentNode.removeChild(old);
+
+        var d = document.createElement("div");
+        d.id = "toast";
+        d.className = "toast";
+        d.textContent = msg;
+        document.body.appendChild(d);
+
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function(){
+          var t = document.getElementById("toast");
+          if (t && t.parentNode) t.parentNode.removeChild(t);
+          toastTimer = null;
+        }, 2500);
+      } catch(e){}
+    }
+
+    // =========================
+    // Audio Unlock (KitKat)
+    // =========================
+    var audioUnlocked = false;
+    function unlockAudio(){
+      audioUnlocked = true;
+      try{
+        if (window.Sound && typeof window.Sound.unlock === "function"){
+          window.Sound.unlock();
+        }
+      } catch(e){}
+
+      var btn = document.getElementById("audioUnlockBtn");
+      if (btn){
+        btn.textContent = "✅ Ton aktiv";
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+      }
+
+      if (soundEnabled && window.Sound && typeof window.Sound.play === "function"){
+        try{ window.Sound.play(); } catch(e){}
+      }
+    }
+
     // =========================================================
     // 1) Plan-Laden (GitHub Pages): plans/mon.js ... plans/sun.js
     // =========================================================
+    var schedule = [];
+    var scheduleDirty = true;
+    var scheduleVersion = 0;
+    var cachedSortedSchedule = [];
+    var lastTimelineState = "";
 
-    let schedule = [];
-    let scheduleDirty = true;
-    let scheduleVersion = 0;
-    let cachedSortedSchedule = [];
-    let lastTimelineState = "";
-
-    const DAY_MAP = ["sun","mon","tue","wed","thu","fri","sat"];
-    const DAY_OVERRIDE_KEY = "scheduleDayOverride"; // "auto" oder "mon".."sun"
-    const MANUAL_UNTIL_KEY = "scheduleManualUntilTs";
-    const LOW_POWER_KEY = "scheduleLowPower";
+    var DAY_MAP = ["sun","mon","tue","wed","thu","fri","sat"];
+    var DAY_OVERRIDE_KEY = "scheduleDayOverride"; // "auto" oder "mon".."sun"
+    var MANUAL_UNTIL_KEY = "scheduleManualUntilTs";
+    var LOW_POWER_KEY = "scheduleLowPower";
 
     function detectLowPowerDevice(){
-      const mem = navigator.deviceMemory || 0;
-      const cores = navigator.hardwareConcurrency || 0;
+      var mem = navigator.deviceMemory || 0;
+      var cores = navigator.hardwareConcurrency || 0;
       return (mem && mem <= 2) || (cores && cores <= 4);
     }
 
     function detectReducedMotion(){
-      return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      try{
+        return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      } catch(e){
+        return false;
+      }
     }
 
     function applyLowPowerMode(){
-      const saved = localStorage.getItem(LOW_POWER_KEY);
-      const shouldEnable = saved === null ? (detectLowPowerDevice() || detectReducedMotion()) : saved === "true";
-      localStorage.setItem(LOW_POWER_KEY, shouldEnable ? "true" : "false");
+      var saved = lsGet(LOW_POWER_KEY);
+      var shouldEnable = (saved === null) ? (detectLowPowerDevice() || detectReducedMotion()) : (saved === "true");
+      lsSet(LOW_POWER_KEY, shouldEnable ? "true" : "false");
       document.body.classList.toggle("low-power", shouldEnable);
       return shouldEnable;
     }
@@ -549,258 +828,297 @@
     }
 
     function applyManualDayTimeout(){
-      const saved = (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
-      const until = parseInt(localStorage.getItem(MANUAL_UNTIL_KEY) || "0", 10);
-      const expired = saved !== "auto" && (until <= 0 || Date.now() >= until);
+      var saved = (lsGet(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
+      var until = parseInt(lsGet(MANUAL_UNTIL_KEY) || "0", 10);
+      var expired = (saved !== "auto") && (until <= 0 || Date.now() >= until);
 
       if (expired){
-        localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
-        localStorage.removeItem(MANUAL_UNTIL_KEY);
+        lsSet(DAY_OVERRIDE_KEY, "auto");
+        lsRemove(MANUAL_UNTIL_KEY);
       }
       return expired;
     }
 
     function getStoredDayOverride(){
       applyManualDayTimeout();
-      return (localStorage.getItem(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
+      return (lsGet(DAY_OVERRIDE_KEY) || "auto").toLowerCase();
     }
 
     function getTodayKey(){
       return DAY_MAP[new Date().getDay()];
     }
 
-    function getSelectedDayKey(){
-      // 1) URL override: ?day=mon
-      const params = new URLSearchParams(window.location.search);
-      const q = (params.get("day") || "").toLowerCase();
-      if (DAY_MAP.includes(q)) return q;
+    function getQueryParam(name){
+      try{
+        var q = window.location.search || "";
+        if (!q || q.length < 2) return "";
+        q = q.substring(1);
+        var parts = q.split("&");
+        var i, kv, key, val;
+        for (i=0; i<parts.length; i++){
+          kv = parts[i].split("=");
+          key = decodeURIComponent(kv[0] || "");
+          if (key === name){
+            val = decodeURIComponent(kv[1] || "");
+            return (val || "");
+          }
+        }
+      } catch(e){}
+      return "";
+    }
 
-      // 2) localStorage override
-      const saved = getStoredDayOverride();
+    function getSelectedDayKey(){
+      var q = (getQueryParam("day") || "").toLowerCase();
+      if (DAY_MAP.indexOf(q) !== -1) return q;
+
+      var saved = getStoredDayOverride();
       if (saved === "auto") return getTodayKey();
-      if (DAY_MAP.includes(saved)) return saved;
+      if (DAY_MAP.indexOf(saved) !== -1) return saved;
 
       return getTodayKey();
     }
 
     function getPlanFileForDay(dayKey){
-      return `plans/${dayKey}.js`;
+      return "plans/" + dayKey + ".js";
     }
 
-    function loadScheduleScript(src){
-      return new Promise((resolve, reject) => {
-        const old = document.getElementById("planScript");
-        if (old) old.remove();
+    function loadScheduleScript(src, cb){
+      try{
+        var old = document.getElementById("planScript");
+        if (old && old.parentNode) old.parentNode.removeChild(old);
 
-        const s = document.createElement("script");
+        var s = document.createElement("script");
         s.id = "planScript";
-        s.src = src + "?v=" + Date.now();
-        s.onload = () => resolve();
-        s.onerror = () => reject(new Error("Konnte Plan-Datei nicht laden: " + src));
+        s.src = src + "?v=" + String(Date.now());
+        s.onload = function(){ cb(null); };
+        s.onerror = function(){ cb(new Error("Konnte Plan-Datei nicht laden: " + src)); };
         document.head.appendChild(s);
+      } catch(e){
+        cb(e);
+      }
+    }
+
+    function loadPlanForCurrentSelection(cb){
+      var dayKey = getSelectedDayKey();
+      var file = getPlanFileForDay(dayKey);
+
+      loadScheduleScript(file, function(err){
+        if (err){
+          cb(err);
+          return;
+        }
+
+        if (window.schedule && Object.prototype.toString.call(window.schedule) === "[object Array]" && window.schedule.length){
+          schedule = window.schedule;
+          markScheduleDirty();
+        } else {
+          cb(new Error("Plan-Datei geladen, aber window.schedule ist leer oder fehlt."));
+          return;
+        }
+
+        setStatusPlanInfo();
+        loadAcknowledgements();
+        stopAlarm();
+        updateTimeline(true);
+        updateNextItem();
+        updateCalorieSummary();
+        cb(null);
       });
     }
 
-    async function loadPlanForCurrentSelection(){
-      const dayKey = getSelectedDayKey();
-      const file = getPlanFileForDay(dayKey);
-
-      await loadScheduleScript(file);
-
-      if (Array.isArray(window.schedule) && window.schedule.length){
-        schedule = window.schedule;
-        markScheduleDirty();
-      } else {
-        throw new Error("Plan-Datei geladen, aber window.schedule ist leer oder fehlt.");
-      }
-
-      setStatusPlanInfo();
-      loadAcknowledgements();
-      stopAlarm();
-      updateTimeline();
-      updateNextItem();
-      updateCalorieSummary();
-    }
-
     function setStatusPlanInfo(){
-      const saved = getStoredDayOverride();
-      const effective = getSelectedDayKey();
-      const label = (saved === "auto" ? `AUTO (${effective.toUpperCase()})` : saved.toUpperCase());
-      const status = document.getElementById("status");
-      if (status) status.textContent = `Plan: ${label}`;
+      var saved = getStoredDayOverride();
+      var effective = getSelectedDayKey();
+      var label = (saved === "auto") ? ("AUTO (" + effective.toUpperCase() + ")") : saved.toUpperCase();
+      var status = document.getElementById("status");
+      if (status) status.textContent = "Plan: " + label;
     }
 
     function syncDayButtonState(){
-      const wrap = document.getElementById("daySwitch");
+      var wrap = document.getElementById("daySwitch");
       if (!wrap) return;
 
-      const btns = Array.from(wrap.querySelectorAll(".day-btn"));
-      const saved = getStoredDayOverride();
+      var btns = wrap.querySelectorAll(".day-btn");
+      var saved = getStoredDayOverride();
+      var i;
 
-      btns.forEach(b => b.classList.remove("active"));
-      const activeKey = (saved === "auto") ? "auto" : saved;
-      const el = wrap.querySelector(`.day-btn[data-day="${activeKey}"]`);
+      for (i=0; i<btns.length; i++){
+        btns[i].classList.remove("active");
+      }
+
+      var activeKey = (saved === "auto") ? "auto" : saved;
+      var el = wrap.querySelector('.day-btn[data-day="' + activeKey + '"]');
       if (el) el.classList.add("active");
     }
 
     function initDaySwitch(){
-      const wrap = document.getElementById("daySwitch");
+      var wrap = document.getElementById("daySwitch");
       if (!wrap) return;
 
-      const btns = Array.from(wrap.querySelectorAll(".day-btn"));
+      var btns = wrap.querySelectorAll(".day-btn");
+      var i;
 
-      btns.forEach(btn => {
-        if (btn.dataset.bound === "1") return;
-        btn.dataset.bound = "1";
+      for (i=0; i<btns.length; i++){
+        (function(btn){
+          if (btn.getAttribute("data-bound") === "1") return;
+          btn.setAttribute("data-bound","1");
 
-        btn.addEventListener("click", async () => {
-          const key = (btn.getAttribute("data-day") || "auto").toLowerCase();
+          btn.addEventListener("click", function(){
+            var key = (btn.getAttribute("data-day") || "auto").toLowerCase();
 
-          if (key === "auto"){
-            localStorage.setItem(DAY_OVERRIDE_KEY, "auto");
-            localStorage.removeItem(MANUAL_UNTIL_KEY);
-          } else {
-            localStorage.setItem(DAY_OVERRIDE_KEY, key);
-            // Auto stellt sich nach 1 Minute wieder ein
-            localStorage.setItem(MANUAL_UNTIL_KEY, String(Date.now() + 60000));
-          }
+            if (key === "auto"){
+              lsSet(DAY_OVERRIDE_KEY, "auto");
+              lsRemove(MANUAL_UNTIL_KEY);
+            } else {
+              lsSet(DAY_OVERRIDE_KEY, key);
+              lsSet(MANUAL_UNTIL_KEY, String(Date.now() + 60000));
+            }
 
-          syncDayButtonState();
+            syncDayButtonState();
 
-          try{
-            await loadPlanForCurrentSelection();
-          } catch(e){
-            showPlanError(e);
-          }
-        });
-      });
+            loadPlanForCurrentSelection(function(err){
+              if (err) showPlanError(err);
+            });
+          });
+        })(btns[i]);
+      }
 
       syncDayButtonState();
     }
 
     function showPlanError(e){
-      console.error(e);
-      const status = document.getElementById("status");
+      try{ console.error(e); } catch(_){}
+      var status = document.getElementById("status");
       if (status) status.textContent = "Plan-Datei fehlt/Fehler";
 
-      const nextItemDiv = document.getElementById("nextItem");
+      var nextItemDiv = document.getElementById("nextItem");
       if (nextItemDiv){
-        nextItemDiv.innerHTML = `
-          <div class="next-item">
-            <h2>⚠️ Plan konnte nicht geladen werden</h2>
-            <div class="description">${String(e && (e.message || e) || "Unbekannter Fehler")}</div>
-          </div>
-        `;
+        nextItemDiv.innerHTML =
+          '<div class="next-item">' +
+            '<h2>⚠️ Plan konnte nicht geladen werden</h2>' +
+            '<div class="description">' + String((e && (e.message || e)) || "Unbekannter Fehler") + '</div>' +
+          '</div>';
       }
 
-      const timeline = document.getElementById("timeline");
+      var timeline = document.getElementById("timeline");
       if (timeline) timeline.innerHTML = "";
     }
 
     // =========================================================
     // 2) Offset-Logik (Morgen-Offset + Nachmittag-Shift ab 12:00)
     // =========================================================
-    const PLAN_START = "06:15";
-    const MORNING_CUTOFF = "12:00";
+    var PLAN_START = "06:15";
+    var MORNING_CUTOFF = "12:00";
 
-    const OFFSET_KEY = "scheduleOffsetMin";
-    const ANCHOR_KEY = "scheduleAnchorTime";
-    const APPLY_ALL_KEY = "scheduleOffsetApplyAllDay";
-    const AFTERNOON_KEY = "scheduleAfternoonOffsetMin";
+    var OFFSET_KEY = "scheduleOffsetMin";
+    var ANCHOR_KEY = "scheduleAnchorTime";
+    var APPLY_ALL_KEY = "scheduleOffsetApplyAllDay";
+    var AFTERNOON_KEY = "scheduleAfternoonOffsetMin";
 
-    let offsetMinutes = 0;
-    let afternoonOffsetMinutes = 0;
-    let applyAllDay = false;
+    var offsetMinutes = 0;
+    var afternoonOffsetMinutes = 0;
+    var applyAllDay = false;
 
-    let lastNotifiedIndex = -1;
-    let soundEnabled = true;
-    let muteUiTimerId = null;
-    const MUTE_DURATION_MS = 180000;
-    let acknowledgedItems = new Set();
-    let activeAlarmIndex = null;
-    let alarmTimerId = null;
+    var lastNotifiedIndex = -1;
+    var soundEnabled = true;
+    var muteUiTimerId = null;
+    var MUTE_DURATION_MS = 180000;
+    var acknowledgedItems = {};
+    var activeAlarmIndex = null;
+    var alarmTimerId = null;
+
+    function setAck(index, val){
+      acknowledgedItems[String(index)] = !!val;
+    }
+    function hasAck(index){
+      return !!acknowledgedItems[String(index)];
+    }
+    function ackKeysSorted(){
+      var keys = [];
+      var k;
+      for (k in acknowledgedItems){
+        if (acknowledgedItems.hasOwnProperty(k) && acknowledgedItems[k]) keys.push(parseInt(k,10));
+      }
+      keys.sort(function(a,b){ return a-b; });
+      return keys;
+    }
 
     function getTimeInMinutes(timeStr){
-      const [h,m] = timeStr.split(":").map(Number);
+      var parts = String(timeStr || "00:00").split(":");
+      var h = parseInt(parts[0],10) || 0;
+      var m = parseInt(parts[1],10) || 0;
       return h*60 + m;
     }
 
     function minutesToHHMM(totalMinutes){
-      const mod = ((totalMinutes % 1440) + 1440) % 1440;
-      const h = String(Math.floor(mod/60)).padStart(2,"0");
-      const m = String(mod%60).padStart(2,"0");
-      return `${h}:${m}`;
+      var mod = ((totalMinutes % 1440) + 1440) % 1440;
+      var h = String(Math.floor(mod/60));
+      var m = String(mod%60);
+      if (h.length < 2) h = "0" + h;
+      if (m.length < 2) m = "0" + m;
+      return h + ":" + m;
     }
 
     function getCurrentMinutes(){
-      const now = new Date();
+      var now = new Date();
       return now.getHours()*60 + now.getMinutes();
     }
 
     function getPerItemOffset(item){
-      const baseMin = getTimeInMinutes(item.time);
-      const cutoffMin = getTimeInMinutes(MORNING_CUTOFF);
+      var baseMin = getTimeInMinutes(item.time);
+      var cutoffMin = getTimeInMinutes(MORNING_CUTOFF);
+      var off = 0;
 
-      let off = 0;
-
-      // Morgen-Offset: (Haken an => alles, Haken aus => nur vor 12:00)
-      if (applyAllDay || baseMin < cutoffMin) {
-        off += offsetMinutes;
-      }
-
-      // Nachmittag-Shift: ab 12:00 zusätzlich
-      if (baseMin >= cutoffMin) {
-        off += afternoonOffsetMinutes;
-      }
+      if (applyAllDay || baseMin < cutoffMin) off += offsetMinutes;
+      if (baseMin >= cutoffMin) off += afternoonOffsetMinutes;
 
       return off;
     }
 
     function getEffectiveItemMinutes(item){
-      const perOffset = getPerItemOffset(item);
-      return ((getTimeInMinutes(item.time) + perOffset) % 1440 + 1440) % 1440;
+      var perOffset = getPerItemOffset(item);
+      var v = getTimeInMinutes(item.time) + perOffset;
+      return ((v % 1440) + 1440) % 1440;
     }
 
     function getEffectiveItemTimeStr(item){
-      const perOffset = getPerItemOffset(item);
+      var perOffset = getPerItemOffset(item);
       return minutesToHHMM(getTimeInMinutes(item.time) + perOffset);
     }
 
     function getAckStorageKey(){
-      const dayKey = getSelectedDayKey();
-      const dateStr = new Date().toISOString().split("T")[0];
-      return `scheduleAck-${dayKey}-${dateStr}`;
+      var dayKey = getSelectedDayKey();
+      var dateStr = new Date().toISOString().split("T")[0];
+      return "scheduleAck-" + dayKey + "-" + dateStr;
     }
 
     function loadAcknowledgements(){
-      acknowledgedItems = new Set();
-      const key = getAckStorageKey();
-      const raw = localStorage.getItem(key);
+      acknowledgedItems = {};
+      var key = getAckStorageKey();
+      var raw = lsGet(key);
       if (!raw) return;
       try{
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)){
-          parsed.forEach(index => acknowledgedItems.add(Number(index)));
+        var parsed = JSON.parse(raw);
+        if (Object.prototype.toString.call(parsed) === "[object Array]"){
+          var i;
+          for (i=0; i<parsed.length; i++){
+            setAck(Number(parsed[i]), true);
+          }
         }
-      } catch(e){
-        console.warn("Konnte Erledigt-Status nicht laden:", e);
-      }
+      } catch(e){}
     }
 
     function saveAcknowledgements(){
-      const key = getAckStorageKey();
-      localStorage.setItem(key, JSON.stringify(Array.from(acknowledgedItems)));
+      var key = getAckStorageKey();
+      var arr = ackKeysSorted();
+      lsSet(key, JSON.stringify(arr));
     }
 
     function setAcknowledged(index, checked){
-      if (checked){
-        acknowledgedItems.add(index);
-      } else {
-        acknowledgedItems.delete(index);
-      }
+      setAck(index, checked);
       saveAcknowledgements();
 
-      const el = document.getElementById(`item-${index}`);
+      var el = document.getElementById("item-" + index);
       if (el) el.classList.toggle("acknowledged", checked);
 
       if (checked && activeAlarmIndex === index){
@@ -810,84 +1128,84 @@
 
     function saveOffset(mins, anchorTimeStr){
       offsetMinutes = mins;
-      localStorage.setItem(OFFSET_KEY, String(mins));
-      if (anchorTimeStr) localStorage.setItem(ANCHOR_KEY, anchorTimeStr);
+      lsSet(OFFSET_KEY, String(mins));
+      if (anchorTimeStr) lsSet(ANCHOR_KEY, anchorTimeStr);
       markScheduleDirty();
     }
 
     function saveAfternoonOffset(mins){
       afternoonOffsetMinutes = mins;
-      localStorage.setItem(AFTERNOON_KEY, String(mins));
+      lsSet(AFTERNOON_KEY, String(mins));
       updateAfternoonLabel();
       markScheduleDirty();
     }
 
     function updateAfternoonLabel(){
-      const el = document.getElementById("afternoonLabel");
+      var el = document.getElementById("afternoonLabel");
       if (!el) return;
-      const v = afternoonOffsetMinutes || 0;
-      el.textContent = (v >= 0 ? `+${v}` : `${v}`) + " min";
+      var v = afternoonOffsetMinutes || 0;
+      el.textContent = (v >= 0 ? ("+" + v) : String(v)) + " min";
     }
 
     function saveApplyAllDay(value){
       applyAllDay = !!value;
-      localStorage.setItem(APPLY_ALL_KEY, applyAllDay ? "true" : "false");
+      lsSet(APPLY_ALL_KEY, applyAllDay ? "true" : "false");
       markScheduleDirty();
     }
 
     function loadOffset(){
-      const saved = localStorage.getItem(OFFSET_KEY);
-      offsetMinutes = saved !== null ? (parseInt(saved,10) || 0) : 0;
+      var saved = lsGet(OFFSET_KEY);
+      offsetMinutes = (saved !== null) ? (parseInt(saved,10) || 0) : 0;
 
-      const savedAfternoon = localStorage.getItem(AFTERNOON_KEY);
-      afternoonOffsetMinutes = savedAfternoon !== null ? (parseInt(savedAfternoon,10) || 0) : 0;
+      var savedAfternoon = lsGet(AFTERNOON_KEY);
+      afternoonOffsetMinutes = (savedAfternoon !== null) ? (parseInt(savedAfternoon,10) || 0) : 0;
 
-      const anchor = localStorage.getItem(ANCHOR_KEY);
-      const anchorInput = document.getElementById("anchorTime");
+      var anchor = lsGet(ANCHOR_KEY);
+      var anchorInput = document.getElementById("anchorTime");
       if (anchor && anchorInput) anchorInput.value = anchor;
 
-      const savedApplyAll = localStorage.getItem(APPLY_ALL_KEY);
-      applyAllDay = savedApplyAll === "true";
-      const applyAllEl = document.getElementById("applyAllDay");
+      var savedApplyAll = lsGet(APPLY_ALL_KEY);
+      applyAllDay = (savedApplyAll === "true");
+      var applyAllEl = document.getElementById("applyAllDay");
       if (applyAllEl) applyAllEl.checked = applyAllDay;
 
       updateAfternoonLabel();
     }
 
     function toggleApplyAllDay(){
-      const el = document.getElementById("applyAllDay");
+      var el = document.getElementById("applyAllDay");
       saveApplyAllDay(el && el.checked);
       lastNotifiedIndex = -1;
-      updateTimeline();
+      updateTimeline(true);
       updateNextItem();
       updateCalorieSummary();
     }
 
     function applyOffsetFromAnchor(){
-      const anchorInput = document.getElementById("anchorTime");
+      var anchorInput = document.getElementById("anchorTime");
       if (!anchorInput || !anchorInput.value) return;
 
-      const actualStart = getTimeInMinutes(anchorInput.value);
-      const planStart = getTimeInMinutes(PLAN_START);
+      var actualStart = getTimeInMinutes(anchorInput.value);
+      var planStart = getTimeInMinutes(PLAN_START);
 
-      const mins = actualStart - planStart;
+      var mins = actualStart - planStart;
       saveOffset(mins, anchorInput.value);
 
       lastNotifiedIndex = -1;
-      updateTimeline();
+      updateTimeline(true);
       updateNextItem();
       updateCalorieSummary();
     }
 
     function resetOffset(){
       saveOffset(0, "");
-      localStorage.removeItem(ANCHOR_KEY);
+      lsRemove(ANCHOR_KEY);
 
-      const anchorInput = document.getElementById("anchorTime");
-      if (anchorInput) anchorInput.value = "";
+      var anchorInput = document.getElementById("anchorTime");
+      if (anchorInput) anchorInput.value("");
 
       lastNotifiedIndex = -1;
-      updateTimeline();
+      updateTimeline(true);
       updateNextItem();
       updateCalorieSummary();
     }
@@ -895,7 +1213,7 @@
     function shiftAfternoon(delta){
       saveAfternoonOffset((afternoonOffsetMinutes || 0) + delta);
       lastNotifiedIndex = -1;
-      updateTimeline();
+      updateTimeline(true);
       updateNextItem();
       updateCalorieSummary();
     }
@@ -903,7 +1221,7 @@
     function resetAfternoonShift(){
       saveAfternoonOffset(0);
       lastNotifiedIndex = -1;
-      updateTimeline();
+      updateTimeline(true);
       updateNextItem();
       updateCalorieSummary();
     }
@@ -912,20 +1230,39 @@
     // 3) Anzeige-Logik (Timeline / Next)
     // =========================================================
     function updateTime(){
-      const now = new Date();
-      const el = document.getElementById("currentTime");
+      var now = new Date();
+      var el = document.getElementById("currentTime");
       if (el) el.textContent = now.toLocaleTimeString("de-DE");
     }
 
+    function getSortedSchedule(){
+      if (!schedule || !schedule.length) return [];
+      if (!scheduleDirty && cachedSortedSchedule.length){
+        return cachedSortedSchedule;
+      }
+
+      var mapped = [];
+      var i;
+      for (i=0; i<schedule.length; i++){
+        mapped.push({ item: schedule[i], index: i, eff: getEffectiveItemMinutes(schedule[i]) });
+      }
+      mapped.sort(function(a,b){ return a.eff - b.eff; });
+
+      cachedSortedSchedule = mapped;
+      scheduleDirty = false;
+      return cachedSortedSchedule;
+    }
+
     function findCurrentAndNext(){
-      const currentMinutes = getCurrentMinutes();
+      var currentMinutes = getCurrentMinutes();
+      var sorted = getSortedSchedule();
 
-      const sorted = getSortedSchedule();
+      var nextIndex = -1;
+      var currentIndex = -1;
 
-      let nextIndex = -1;
-      let currentIndex = -1;
-
-      for (const entry of sorted){
+      var i, entry;
+      for (i=0; i<sorted.length; i++){
+        entry = sorted[i];
         if (entry.eff <= currentMinutes){
           currentIndex = entry.index;
         } else {
@@ -934,194 +1271,214 @@
         }
       }
 
-      return { currentIndex, nextIndex, sorted };
+      return { currentIndex: currentIndex, nextIndex: nextIndex, sorted: sorted };
     }
 
-    function getSortedSchedule(){
-      if (!Array.isArray(schedule) || !schedule.length) return [];
-      if (!scheduleDirty && cachedSortedSchedule.length){
-        return cachedSortedSchedule;
-      }
-
-      cachedSortedSchedule = schedule
-        .map((item, index) => ({ item, index, eff: getEffectiveItemMinutes(item) }))
-        .sort((a, b) => a.eff - b.eff);
-      scheduleDirty = false;
-      return cachedSortedSchedule;
-    }
-
-    function updateTimeline(force = false){
-      const timeline = document.getElementById("timeline");
+    function updateTimeline(force){
+      var timeline = document.getElementById("timeline");
       if (!timeline) return;
 
-      if (!Array.isArray(schedule) || !schedule.length){
+      if (!schedule || !schedule.length){
         timeline.innerHTML = "";
         return;
       }
 
-      const { currentIndex, sorted } = findCurrentAndNext();
-      const ackKey = Array.from(acknowledgedItems).sort((a,b) => a-b).join(",");
-      const stateKey = `${scheduleVersion}|${currentIndex}|${ackKey}`;
+      var info = findCurrentAndNext();
+      var currentIndex = info.currentIndex;
+      var sorted = info.sorted;
+
+      var ackKey = ackKeysSorted().join(",");
+      var stateKey = String(scheduleVersion) + "|" + String(currentIndex) + "|" + ackKey;
       if (!force && stateKey === lastTimelineState) return;
       lastTimelineState = stateKey;
 
       timeline.innerHTML = "";
 
-      const positions = new Map();
-      sorted.forEach((entry, pos) => positions.set(entry.index, pos));
-      const currentPos = positions.get(currentIndex);
+      var positions = {};
+      var i;
+      for (i=0; i<sorted.length; i++){
+        positions[String(sorted[i].index)] = i;
+      }
+      var currentPos = positions[String(currentIndex)];
 
-      sorted.forEach(({ item, index }) => {
-        const div = document.createElement("div");
-        div.className = "timeline-item";
-        div.id = `item-${index}`;
+      for (i=0; i<sorted.length; i++){
+        (function(entry){
+          var item = entry.item;
+          var index = entry.index;
 
-        const thisPos = positions.get(index);
+          var div = document.createElement("div");
+          div.className = "timeline-item";
+          div.id = "item-" + index;
 
-        if (currentIndex !== -1 && thisPos < currentPos) div.classList.add("completed");
-        if (index === currentIndex) div.classList.add("current");
+          var thisPos = positions[String(index)];
 
-        const effTime = getEffectiveItemTimeStr(item);
+          if (currentIndex !== -1 && thisPos < currentPos) div.classList.add("completed");
+          if (index === currentIndex) div.classList.add("current");
 
-        const isAcknowledged = acknowledgedItems.has(index);
-        if (isAcknowledged) div.classList.add("acknowledged");
+          var effTime = getEffectiveItemTimeStr(item);
 
-        div.innerHTML = `
-          <div class="time">${effTime} Uhr</div>
-          <div class="description">
-            <strong>${item.title}</strong>
-            ${item.description ? `<br>${item.description}` : ""}
-          </div>
-          ${item.calories > 0 ? `<div class="calories">📊 ${item.calories} kcal</div>` : ""}
-          <label class="acknowledge">
-            <input type="checkbox" class="ack-checkbox" data-index="${index}" ${isAcknowledged ? "checked" : ""} />
-            Erledigt
-          </label>
-        `;
-        const checkbox = div.querySelector(".ack-checkbox");
-        if (checkbox){
-          checkbox.addEventListener("change", () => {
-            setAcknowledged(index, checkbox.checked);
-          });
-        }
-        timeline.appendChild(div);
-      });
+          var isAcknowledged = hasAck(index);
+          if (isAcknowledged) div.classList.add("acknowledged");
+
+          var descExtra = "";
+          if (item.description){
+            descExtra = "<br>" + item.description;
+          }
+          var kcal = "";
+          if (parseInt(item.calories,10) > 0){
+            kcal = '<div class="calories">📊 ' + parseInt(item.calories,10) + ' kcal</div>';
+          }
+
+          div.innerHTML =
+            '<div class="time">' + effTime + ' Uhr</div>' +
+            '<div class="description">' +
+              '<strong>' + item.title + '</strong>' +
+              descExtra +
+            '</div>' +
+            kcal +
+            '<label class="acknowledge">' +
+              '<input type="checkbox" class="ack-checkbox" data-index="' + index + '"' + (isAcknowledged ? ' checked' : '') + ' />' +
+              'Erledigt' +
+            '</label>';
+
+          var checkbox = div.querySelector(".ack-checkbox");
+          if (checkbox){
+            checkbox.addEventListener("change", function(){
+              setAcknowledged(index, checkbox.checked);
+            });
+          }
+          timeline.appendChild(div);
+        })(sorted[i]);
+      }
     }
 
     function updateNextItem(){
-      const nextItemDiv = document.getElementById("nextItem");
+      var nextItemDiv = document.getElementById("nextItem");
       if (!nextItemDiv) return;
 
-      if (!Array.isArray(schedule) || !schedule.length){
-        nextItemDiv.innerHTML = `
-          <div class="next-item">
-            <h2>⚠️ Kein Plan geladen</h2>
-            <div class="description">Bitte prüfe deine Plan-Dateien in <code>plans/</code>.</div>
-          </div>
-        `;
+      if (!schedule || !schedule.length){
+        nextItemDiv.innerHTML =
+          '<div class="next-item">' +
+            '<h2>⚠️ Kein Plan geladen</h2>' +
+            '<div class="description">Bitte prüfe deine Plan-Dateien in <code>plans/</code>.</div>' +
+          '</div>';
         return;
       }
 
-      const { nextIndex } = findCurrentAndNext();
+      var info = findCurrentAndNext();
+      var nextIndex = info.nextIndex;
 
       if (nextIndex === -1){
-        nextItemDiv.innerHTML = `
-          <div class="next-item">
-            <h2>✅ Tagesplan abgeschlossen!</h2>
-            <div class="description">Alle Punkte für heute erledigt.</div>
-          </div>
-        `;
+        nextItemDiv.innerHTML =
+          '<div class="next-item">' +
+            '<h2>✅ Tagesplan abgeschlossen!</h2>' +
+            '<div class="description">Alle Punkte für heute erledigt.</div>' +
+          '</div>';
         return;
       }
 
-      const nextItem = schedule[nextIndex];
-      const currentMinutes = getCurrentMinutes();
-      const nextMinutes = getEffectiveItemMinutes(nextItem);
+      var nextItem = schedule[nextIndex];
+      var currentMinutes = getCurrentMinutes();
+      var nextMinutes = getEffectiveItemMinutes(nextItem);
 
-      let minutesUntil = nextMinutes - currentMinutes;
+      var minutesUntil = nextMinutes - currentMinutes;
       if (minutesUntil < 0) minutesUntil += 1440;
 
-      const effTime = getEffectiveItemTimeStr(nextItem);
+      var effTime = getEffectiveItemTimeStr(nextItem);
 
-      nextItemDiv.innerHTML = `
-        <div class="next-item">
-          <h2>Als Nächstes:</h2>
-          <div class="time">${effTime} Uhr</div>
-          <div class="description">
-            <strong>${nextItem.title}</strong><br>
-            ${nextItem.description ? `${nextItem.description}<br>` : ""}
-            ${nextItem.calories > 0 ? `<br>📊 ${nextItem.calories} kcal` : ""}
-          </div>
-        </div>
-      `;
+      var desc = "";
+      if (nextItem.description) desc += nextItem.description + "<br>";
+      if (parseInt(nextItem.calories,10) > 0) desc += "<br>📊 " + parseInt(nextItem.calories,10) + " kcal";
+
+      nextItemDiv.innerHTML =
+        '<div class="next-item">' +
+          '<h2>Als Nächstes:</h2>' +
+          '<div class="time">' + effTime + ' Uhr</div>' +
+          '<div class="description">' +
+            '<strong>' + nextItem.title + '</strong><br>' +
+            desc +
+          '</div>' +
+        '</div>';
     }
 
     function calculateCalorieTotals(){
-      if (!Array.isArray(schedule) || !schedule.length) return null;
+      if (!schedule || !schedule.length) return null;
 
-      const total = schedule.reduce((sum, item) => sum + (parseInt(item.calories, 10) || 0), 0);
-      const currentMinutes = getCurrentMinutes();
+      var total = 0;
+      var i;
+      for (i=0; i<schedule.length; i++){
+        total += (parseInt(schedule[i].calories, 10) || 0);
+      }
 
-      const sorted = schedule
-        .map(item => ({ item, eff: getEffectiveItemMinutes(item) }))
-        .sort((a, b) => a.eff - b.eff);
+      var currentMinutes = getCurrentMinutes();
 
-      const completed = sorted.reduce((sum, entry) => {
-        const kcal = parseInt(entry.item.calories, 10) || 0;
-        return entry.eff <= currentMinutes ? sum + kcal : sum;
-      }, 0);
+      var sorted = [];
+      for (i=0; i<schedule.length; i++){
+        sorted.push({ item: schedule[i], eff: getEffectiveItemMinutes(schedule[i]) });
+      }
+      sorted.sort(function(a,b){ return a.eff - b.eff; });
 
-      const remaining = Math.max(total - completed, 0);
-      return { total, completed, remaining };
+      var completed = 0;
+      for (i=0; i<sorted.length; i++){
+        var kcal = parseInt(sorted[i].item.calories, 10) || 0;
+        if (sorted[i].eff <= currentMinutes) completed += kcal;
+      }
+
+      var remaining = Math.max(total - completed, 0);
+      return { total: total, completed: completed, remaining: remaining };
     }
 
     function updateCalorieSummary(){
-      const summary = document.getElementById("calorieSummary");
+      var summary = document.getElementById("calorieSummary");
       if (!summary) return;
 
-      if (!Array.isArray(schedule) || !schedule.length){
+      if (!schedule || !schedule.length){
         summary.innerHTML = "";
         return;
       }
 
-      const totals = calculateCalorieTotals();
+      var totals = calculateCalorieTotals();
       if (!totals){
         summary.innerHTML = "";
         return;
       }
 
-      summary.innerHTML = `
-        <div class="calorie-pill">
-          <span class="calorie-label">Gesamt</span>
-          <span class="calorie-value">${totals.total} kcal</span>
-        </div>
-        <div class="calorie-pill">
-          <span class="calorie-label">Erledigt</span>
-          <span class="calorie-value">${totals.completed} kcal</span>
-        </div>
-        <div class="calorie-pill">
-          <span class="calorie-label">Offen</span>
-          <span class="calorie-value">${totals.remaining} kcal</span>
-        </div>
-      `;
+      summary.innerHTML =
+        '<div class="calorie-pill">' +
+          '<span class="calorie-label">Gesamt</span>' +
+          '<span class="calorie-value">' + totals.total + ' kcal</span>' +
+        '</div>' +
+        '<div class="calorie-pill">' +
+          '<span class="calorie-label">Erledigt</span>' +
+          '<span class="calorie-value">' + totals.completed + ' kcal</span>' +
+        '</div>' +
+        '<div class="calorie-pill">' +
+          '<span class="calorie-label">Offen</span>' +
+          '<span class="calorie-value">' + totals.remaining + ' kcal</span>' +
+        '</div>';
     }
 
     // =========================================================
     // 4) Notifications / Sound / Theme / Scroll
     // =========================================================
-    function checkForNotifications(){
-      if (!("Notification" in window)) return;
-      if (Notification.permission !== "granted") return;
-      if (!Array.isArray(schedule) || !schedule.length) return;
+    function notificationsSupported(){
+      return ("Notification" in window);
+    }
 
-      const { nextIndex } = findCurrentAndNext();
+    function checkForNotifications(){
+      if (!notificationsSupported()) return;
+      if (Notification.permission !== "granted") return;
+      if (!schedule || !schedule.length) return;
+
+      var info = findCurrentAndNext();
+      var nextIndex = info.nextIndex;
       if (nextIndex === -1 || nextIndex === lastNotifiedIndex) return;
 
-      const nextItem = schedule[nextIndex];
-      const currentMinutes = getCurrentMinutes();
-      const nextMinutes = getEffectiveItemMinutes(nextItem);
+      var nextItem = schedule[nextIndex];
+      var currentMinutes = getCurrentMinutes();
+      var nextMinutes = getEffectiveItemMinutes(nextItem);
 
-      let minutesUntil = nextMinutes - currentMinutes;
+      var minutesUntil = nextMinutes - currentMinutes;
       if (minutesUntil < -720) minutesUntil += 1440;
       if (minutesUntil < 0) minutesUntil += 1440;
 
@@ -1132,48 +1489,85 @@
     }
 
     function sendNotification(item){
-      if (soundEnabled && window.Sound) window.Sound.play();
-      const effTime = getEffectiveItemTimeStr(item);
+      var effTime = getEffectiveItemTimeStr(item);
 
-      const n = new Notification("🍽️ Tagesplan Erinnerung", {
-        body: `${effTime} Uhr: ${item.title}${item.description ? "\n" + item.description : ""}`,
-        tag: "meal-reminder",
-        requireInteraction: true
-      });
+      if (audioUnlocked && soundEnabled && window.Sound && typeof window.Sound.play === "function"){
+        try{ window.Sound.play(); } catch(e){}
+      }
 
-      n.onclick = function(){
-        window.focus();
-        n.close();
-      };
+      if (!notificationsSupported() || Notification.permission !== "granted"){
+        showToast(effTime + " Uhr: " + item.title);
+        return;
+      }
+
+      try{
+        var body = effTime + " Uhr: " + item.title + (item.description ? ("\n" + item.description) : "");
+        var n = new Notification("🍽️ Tagesplan Erinnerung", {
+          body: body,
+          tag: "meal-reminder",
+          requireInteraction: true
+        });
+
+        n.onclick = function(){
+          try{ window.focus(); } catch(e){}
+          try{ n.close(); } catch(e){}
+        };
+      } catch(e){
+        showToast(effTime + " Uhr: " + item.title);
+      }
     }
 
     function requestNotificationPermission(){
-      if (!("Notification" in window)) return;
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted"){
-          const a = document.getElementById("notificationAlert");
-          if (a) a.classList.remove("show");
-          alert("✅ Benachrichtigungen aktiviert!");
-        }
-      });
+      if (!notificationsSupported()){
+        showToast("Benachrichtigungen werden auf diesem Gerät/Browser nicht unterstützt.");
+        return;
+      }
+
+      try{
+        Notification.requestPermission(function(permission){
+          if (permission === "granted"){
+            var a = document.getElementById("notificationAlert");
+            if (a) a.classList.remove("show");
+            alert("✅ Benachrichtigungen aktiviert!");
+          } else {
+            showToast("Benachrichtigungen nicht erlaubt.");
+          }
+        });
+      } catch(e){
+        showToast("Benachrichtigungen nicht verfügbar.");
+      }
     }
 
     function testNotification(){
-      if (!("Notification" in window)) return;
+      if (!notificationsSupported()){
+        showToast("Benachrichtigungen nicht unterstützt (KitKat).");
+        if (audioUnlocked && soundEnabled && window.Sound && typeof window.Sound.play === "function"){
+          try{ window.Sound.play(); } catch(e){}
+        }
+        return;
+      }
 
       if (Notification.permission === "granted"){
-        if (soundEnabled && window.Sound){
-          window.Sound.play();
-          const repeatDelay = typeof window.Sound.getDurationMs === "function"
-            ? window.Sound.getDurationMs()
-            : 0;
-          if (repeatDelay > 0){
-            setTimeout(() => {
-              if (soundEnabled && window.Sound) window.Sound.play();
-            }, repeatDelay);
-          }
+        if (audioUnlocked && soundEnabled && window.Sound && typeof window.Sound.play === "function"){
+          try{
+            window.Sound.play();
+            var repeatDelay = (window.Sound && typeof window.Sound.getDurationMs === "function")
+              ? window.Sound.getDurationMs()
+              : 0;
+            if (repeatDelay > 0){
+              setTimeout(function(){
+                if (audioUnlocked && soundEnabled && window.Sound && typeof window.Sound.play === "function"){
+                  try{ window.Sound.play(); } catch(e){}
+                }
+              }, repeatDelay);
+            }
+          } catch(e){}
         }
-        new Notification("🍽️ Test-Benachrichtigung", { body: "Die Benachrichtigungen funktionieren!" });
+        try{
+          new Notification("🍽️ Test-Benachrichtigung", { body: "Die Benachrichtigungen funktionieren!" });
+        } catch(e){
+          showToast("Benachrichtigung konnte nicht angezeigt werden.");
+        }
       } else if (Notification.permission === "denied"){
         alert("Benachrichtigungen wurden blockiert. Bitte aktiviere sie in den Browser-Einstellungen.");
       } else {
@@ -1182,103 +1576,127 @@
     }
 
     function toggleSound(){
-      const el = document.getElementById("soundToggle");
+      var el = document.getElementById("soundToggle");
       soundEnabled = !!(el && el.checked);
-      localStorage.setItem("soundEnabled", String(soundEnabled));
-      if (window.Sound) window.Sound.setEnabled(soundEnabled);
+      lsSet("soundEnabled", String(soundEnabled));
+
+      if (window.Sound && typeof window.Sound.setEnabled === "function"){
+        try{ window.Sound.setEnabled(soundEnabled); } catch(e){}
+      }
+
       if (!soundEnabled) stopAlarm();
 
-      const label = document.querySelector('label[for="soundToggle"]');
+      var label = document.querySelector('label[for="soundToggle"]');
       if (!label) return;
 
       if (soundEnabled){
         label.textContent = "🔊 Signalton aktiviert";
-        if (window.Sound) window.Sound.play(); // kurzer Bestätigungston
+        if (audioUnlocked && window.Sound && typeof window.Sound.play === "function"){
+          try{ window.Sound.play(); } catch(e){}
+        }
       } else {
         label.textContent = "🔇 Signalton deaktiviert";
       }
     }
 
     function updateMuteToggleLabel(isMuted){
-      const label = document.querySelector('label[for="muteToggle"]');
+      var label = document.querySelector('label[for="muteToggle"]');
       if (!label) return;
       label.textContent = isMuted ? "🔇 3 Minuten stumm (aktiv)" : "🔇 3 Minuten stumm";
     }
 
     function toggleMuteForThreeMinutes(){
-      const el = document.getElementById("muteToggle");
-      const isMuted = !!(el && el.checked);
+      var el = document.getElementById("muteToggle");
+      var isMuted = !!(el && el.checked);
 
       if (muteUiTimerId) clearTimeout(muteUiTimerId);
 
       if (isMuted){
-        if (window.Sound) window.Sound.muteForMs(MUTE_DURATION_MS);
+        if (window.Sound && typeof window.Sound.muteForMs === "function"){
+          try{ window.Sound.muteForMs(MUTE_DURATION_MS); } catch(e){}
+        }
         updateMuteToggleLabel(true);
-        muteUiTimerId = setTimeout(() => {
-          const toggle = document.getElementById("muteToggle");
+        muteUiTimerId = setTimeout(function(){
+          var toggle = document.getElementById("muteToggle");
           if (toggle) toggle.checked = false;
           updateMuteToggleLabel(false);
           muteUiTimerId = null;
         }, MUTE_DURATION_MS);
       } else {
-        if (window.Sound) window.Sound.resetMute();
+        if (window.Sound && typeof window.Sound.resetMute === "function"){
+          try{ window.Sound.resetMute(); } catch(e){}
+        }
         updateMuteToggleLabel(false);
       }
     }
 
     function scrollToNext(){
-      if (!Array.isArray(schedule) || !schedule.length) return;
-      const { nextIndex } = findCurrentAndNext();
+      if (!schedule || !schedule.length) return;
+      var info = findCurrentAndNext();
+      var nextIndex = info.nextIndex;
       if (nextIndex !== -1){
-        const el = document.getElementById(`item-${nextIndex}`);
-        if (el) el.scrollIntoView({ behavior:"smooth", block:"center" });
+        var el = document.getElementById("item-" + nextIndex);
+        if (el && el.scrollIntoView){
+          try{ el.scrollIntoView({ behavior:"smooth", block:"center" }); }
+          catch(e){ el.scrollIntoView(true); }
+        }
       }
     }
 
     function toggleTheme(){
       document.body.classList.toggle("medical");
-      const isMedical = document.body.classList.contains("medical");
-      localStorage.setItem("theme", isMedical ? "medical" : "default");
+      var isMedical = document.body.classList.contains("medical");
+      lsSet("theme", isMedical ? "medical" : "default");
     }
 
     function loadTheme(){
-      const savedTheme = localStorage.getItem("theme");
+      var savedTheme = lsGet("theme");
       if (savedTheme === "medical") document.body.classList.add("medical");
     }
 
     function loadSoundPreference(){
-      const savedSound = localStorage.getItem("soundEnabled");
+      var savedSound = lsGet("soundEnabled");
       if (savedSound !== null){
-        soundEnabled = savedSound === "true";
-        const t = document.getElementById("soundToggle");
+        soundEnabled = (savedSound === "true");
+        var t = document.getElementById("soundToggle");
         if (t) t.checked = soundEnabled;
 
-        if (window.Sound) window.Sound.setEnabled(soundEnabled);
+        if (window.Sound && typeof window.Sound.setEnabled === "function"){
+          try{ window.Sound.setEnabled(soundEnabled); } catch(e){}
+        }
 
-        const label = document.querySelector('label[for="soundToggle"]');
+        var label = document.querySelector('label[for="soundToggle"]');
         if (label) label.textContent = soundEnabled ? "🔊 Signalton aktiviert" : "🔇 Signalton deaktiviert";
       } else {
-        if (window.Sound) window.Sound.setEnabled(true);
+        if (window.Sound && typeof window.Sound.setEnabled === "function"){
+          try{ window.Sound.setEnabled(true); } catch(e){}
+        }
       }
     }
 
     function initMuteToggle(){
-      const t = document.getElementById("muteToggle");
+      var t = document.getElementById("muteToggle");
       if (t) t.checked = false;
       updateMuteToggleLabel(false);
     }
 
     function startAlarmForIndex(index){
       if (!soundEnabled || !window.Sound) return;
+      if (!audioUnlocked) return;
       if (activeAlarmIndex === index && alarmTimerId) return;
 
       stopAlarm();
       activeAlarmIndex = index;
 
-      window.Sound.play();
-      alarmTimerId = setInterval(() => {
-        if (!soundEnabled || !window.Sound) return;
-        window.Sound.play();
+      try{
+        if (window.Sound && typeof window.Sound.play === "function") window.Sound.play();
+      } catch(e){}
+
+      alarmTimerId = setInterval(function(){
+        if (!soundEnabled || !audioUnlocked || !window.Sound) return;
+        try{
+          if (window.Sound && typeof window.Sound.play === "function") window.Sound.play();
+        } catch(e){}
       }, 30000);
     }
 
@@ -1291,88 +1709,95 @@
     }
 
     function checkForRepeatingAlarm(){
-      if (!Array.isArray(schedule) || !schedule.length) return;
+      if (!schedule || !schedule.length) return;
       if (!soundEnabled) return;
+      if (!audioUnlocked) return;
 
       if (activeAlarmIndex !== null){
-        if (acknowledgedItems.has(activeAlarmIndex)) stopAlarm();
+        if (hasAck(activeAlarmIndex)) stopAlarm();
         return;
       }
 
-      const currentMinutes = getCurrentMinutes();
-      const sorted = getSortedSchedule();
+      var currentMinutes = getCurrentMinutes();
+      var sorted = getSortedSchedule();
 
-      const candidate = sorted.find(entry => {
-        let minutesUntil = entry.eff - currentMinutes;
+      var candidate = null;
+      var i;
+      for (i=0; i<sorted.length; i++){
+        var entry = sorted[i];
+        var minutesUntil = entry.eff - currentMinutes;
         if (minutesUntil < -720) minutesUntil += 1440;
         if (minutesUntil < 0) minutesUntil += 1440;
-        return minutesUntil <= 2;
-      });
+        if (minutesUntil <= 2){
+          candidate = entry;
+          break;
+        }
+      }
 
-      if (candidate && !acknowledgedItems.has(candidate.index)){
+      if (candidate && !hasAck(candidate.index)){
         startAlarmForIndex(candidate.index);
       }
     }
 
     // Scroll-Detektor
-    let isScrolling = false;
-    let scrollTimer = null;
-    window.addEventListener("scroll", () => {
+    var isScrolling = false;
+    var scrollTimer = null;
+    window.addEventListener("scroll", function(){
       isScrolling = true;
       if (scrollTimer) clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => { isScrolling = false; }, 180);
-    }, { passive:true });
+      scrollTimer = setTimeout(function(){ isScrolling = false; }, 180);
+    }, false);
 
     // =========================================================
     // 5) Start
     // =========================================================
-    async function start(){
-      const lowPowerEnabled = applyLowPowerMode();
+    function start(){
+      var lowPowerEnabled = applyLowPowerMode();
       loadTheme();
       loadSoundPreference();
       initMuteToggle();
       loadOffset();
       initDaySwitch();
-      const resetOnLoad = applyManualDayTimeout();
+
+      var resetOnLoad = applyManualDayTimeout();
       if (resetOnLoad) syncDayButtonState();
+
       updateTime();
       updateCalorieSummary();
 
-      if (("Notification" in window) && Notification.permission === "default"){
-        const a = document.getElementById("notificationAlert");
-        if (a) a.classList.add("show");
+      if (notificationsSupported()){
+        try{
+          if (Notification.permission === "default"){
+            var a = document.getElementById("notificationAlert");
+            if (a) a.classList.add("show");
+          }
+        } catch(e){}
       }
 
-      try{
-        await loadPlanForCurrentSelection();
-      } catch(e){
-        showPlanError(e);
-      }
-      const updateIntervalMs = lowPowerEnabled ? 20000 : 10000;
+      loadPlanForCurrentSelection(function(err){
+        if (err) showPlanError(err);
+      });
 
-      setInterval(async () => {
+      var updateIntervalMs = lowPowerEnabled ? 20000 : 10000;
+
+      setInterval(function(){
         updateTime();
 
-        // Auto-Reset prüfen (manueller Tag läuft nach 1 Minute aus)
-        const wasResetToAuto = applyManualDayTimeout();
+        var wasResetToAuto = applyManualDayTimeout();
 
         if (wasResetToAuto) {
           syncDayButtonState();
-
-          try{
-            await loadPlanForCurrentSelection();
-          } catch(e){
-            showPlanError(e);
-          }
-
-          setStatusPlanInfo();
+          loadPlanForCurrentSelection(function(err){
+            if (err) showPlanError(err);
+            setStatusPlanInfo();
+          });
         }
 
         updateNextItem();
         updateCalorieSummary();
         checkForNotifications();
         checkForRepeatingAlarm();
-        if (!isScrolling) updateTimeline();
+        if (!isScrolling) updateTimeline(false);
       }, updateIntervalMs);
     }
 
