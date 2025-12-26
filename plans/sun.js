@@ -8,6 +8,7 @@ window.schedule = [
   { time: "07:00", title: "Medikamente + Supplemente (morgens)", description: "Eliquis/Apixaban 5 mg + Finerenon 10 mg + Vitamin D3/K2 + Omega-3 + Q10", calories: 0 },
   { time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
   { time: "08:00", title: "Frühstück (ruhig)", description: "Haferflocken 50 g, Magerquark 150 g, Beeren 80 g, Leinöl 1 EL, Flohsamen 1 TL", calories: 350 },
+  { time: "08:10", title: "Vitamin C", description: "200–250 mg, zu/kurz nach dem Frühstück", calories: 0 },
   { time: "09:00", title: "Herz / Niere", description: "Bisoprolol, Amlodipin, Ezetimib", calories: 0 },
   { time: "09:30", title: "Eiweißblock (klein)", description: "1 Ei (gekocht)", calories: 80 },
  
@@ -21,7 +22,6 @@ window.schedule = [
   { time: "18:30", title: "Leicht & warm", description: "Gemüse 300 g + Miso-Dashi 1–2 TL (als Suppe) + optional Buchweizen 40–60 g gekocht", calories: 200 },
 
   { time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
-  { time: "20:30", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 },
+  { time: "20:40", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 },
   { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
 ];
-
