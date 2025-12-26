@@ -9,6 +9,7 @@ window.schedule = [
   
   { time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
   { time: "08:00", title: "Frühstück (Overnight-Oats)", description: "Haferflocken 50 g (über Nacht), Magerquark 150 g, Beeren 80 g, Leinöl 1 EL, Flohsamen 1 TL", calories: 350 },
+  { time: "08:10", title: "Vitamin C", description: "200–250 mg, zu/kurz nach dem Frühstück", calories: 0 },
   { time: "09:00", title: "Herz / Niere", description: "Bisoprolol, Amlodipin, Ezetimib", calories: 0 },
   { time: "09:30", title: "Eiweißblock (klein)", description: "1 Ei (gekocht) + Gemüse roh (z.B. Gurke/Paprika) optional", calories: 80 },
 
@@ -22,6 +23,6 @@ window.schedule = [
   { time: "18:30", title: "Leicht & warm", description: "Gemüsesuppe 1 Schale + Miso-Dashi 1 TL (salzig, warm)", calories: 180 },
 
   { time: "20:30", title: "Zink", description: "nur mit Wasser", calories: 0 },
-  { time: "20:30", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 },
+  { time: "20:40", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 },
   { time: "22:00", title: "Magnesium-Bisglycinat", description: "", calories: 0 }
 ];
