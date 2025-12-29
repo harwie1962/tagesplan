@@ -1,6 +1,6 @@
 // plans/mon.js
 window.schedule = [
-  { time: "06:00", title: "Apfelessig-Wasser", description: "optional: 1 TL in Wasser, 10–15 Min Abstand zu Medikamenten", calories: 0 },
+  { time: "06:00", title: "Apfelessig-Wasser", description: "optional: 1 TL in Wasser, 10–15 Min Abstand zu Medikamenten"", calories: 0 },
   { time: "06:10", title: "Tagesfokus", description: "🟢 Montag – Stabiler Start: ruhig bleiben, keine Experimente", calories: 0 },
 
   { time: "06:15", title: "Prednisolon", description: ", calories: 0 },
