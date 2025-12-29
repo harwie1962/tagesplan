@@ -1,11 +1,11 @@
 // plans/mon.js
 window.schedule = [
-  { time: "06:00", title: "Apfelessig-Wasser", description: "optional: 1 TL in Wasser, 10–15 Min Abstand zu Medikamenten"", calories: 0 },
+  { time: "06:00", title: "Apfelessig-Wasser", description: "optional: 1 TL in Wasser, 10–15 Min Abstand zu Medikamenten", calories: 0 },
   { time: "06:10", title: "Tagesfokus", description: "🟢 Montag – Stabiler Start: ruhig bleiben, keine Experimente", calories: 0 },
 
-  { time: "06:15", title: "Prednisolon", description: ", calories: 0 },
-  { time: "06:30", title: "Vitamin-B-Komplex", description: ", calories: 0 },
-  { time: "06:40", title: "Magnesium-Malat", description: ", calories: 0 },
+  { time: "06:15", title: "Prednisolon", description: "", calories: 0 },
+  { time: "06:30", title: "Vitamin-B-Komplex", description: "", calories: 0 },
+  { time: "06:40", title: "Magnesium-Malat", description: "", calories: 0 },
   { time: "06:45", title: "L-Glutamin", description: "5 g (mit Wasser)", calories: 0 },
 
   { time: "07:00", title: "Medikamente + Supplemente (morgens)", description: "Eliquis/Apixaban 5 mg + Finerenon 10 mg + Vitamin D3/K2 + Omega-3 + Q10", calories: 0 },
