@@ -822,6 +822,9 @@
         if (window.schedule && Object.prototype.toString.call(window.schedule) === "[object Array]" && window.schedule.length){
           schedule = window.schedule;
           markScheduleDirty();
+
+          // ✅ FIX: PLAN_START dynamisch aus dem frühesten Event berechnen
+          PLAN_START = computePlanStartFromSchedule();
         } else {
           cb(new Error("Plan-Datei geladen, aber window.schedule ist leer oder fehlt."));
           return;
@@ -966,6 +969,19 @@
       return h + ":" + m;
     }
 
+    // ✅ FIX: Plan-Start automatisch aus dem frühesten Event berechnen
+    function computePlanStartFromSchedule(){
+      if (!schedule || !schedule.length) return "06:15";
+      var min = 24 * 60 + 1;
+      var i, t;
+      for (i = 0; i < schedule.length; i++){
+        t = getTimeInMinutes(schedule[i].time);
+        if (t < min) min = t;
+      }
+      if (min >= 0 && min <= 24*60) return minutesToHHMM(min);
+      return "06:15";
+    }
+
     function getCurrentMinutes(){
       var now = new Date();
       return now.getHours()*60 + now.getMinutes();
@@ -1087,6 +1103,8 @@
       if (!anchorInput || !anchorInput.value) return;
 
       var actualStart = getTimeInMinutes(anchorInput.value);
+
+      // ✅ FIX: planStart immer aus dynamischem PLAN_START (frühestes Event)
       var planStart = getTimeInMinutes(PLAN_START);
 
       var mins = actualStart - planStart;
