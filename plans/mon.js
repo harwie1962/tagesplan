@@ -18,7 +18,7 @@ window.schedule = [
     calories: 0
   },
   {
-    time: "08:10",
+    time: "08:30",
     title: "Vitamin C",
     description: "200–250 mg, nach dem Frühstück",
     calories: 0
