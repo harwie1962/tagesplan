@@ -2,18 +2,12 @@
 window.schedule = [
   { time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
 
- {
+  {
   time: "08:00",
   title: "🌅 Frühstück – leberfreundlich & sättigend",
   description:
-    "Haferflocken 50 g<br>" +
-    "Magerquark 150 g<br>" +
-    "Beeren 80 g<br>" +
-    "Leinöl 1 EL<br>" +
-    "Flohsamen 1 TL<br><br>" +
     "➡ <a href='rezepte/fruehstueck_quark_01.html' target='_blank'>Rezept & Varianten</a>",
-  calories: 350
-},
+  calories: 350 },
 
   { time: "08:10", title: "Medikamente + Supplemente (nach dem Frühstück)", description: "Prednisolon + Eliquis/Apixaban 5 mg + Finerenon 10 mg + Bisoprolol + Amlodipin + Ezetimib + Vitamin D3/K2 + Omega-3 + Q10 + Vitamin-B-Komplex + Magnesium-Malat", calories: 0 },
   { time: "08:10", title: "Vitamin C", description: "200–250 mg, nach dem Frühstück", calories: 0 },
