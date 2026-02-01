@@ -2,8 +2,7 @@
 window.schedule = [
   { time: "07:30", title: "Kollagen-Drink", description: "10 g", calories: 36 },
 
-  {
-  time: "08:00",
+  { time: "08:00",
   title: "🌅 Frühstück – leberfreundlich & sättigend",
   description:
     "➡ <a href='rezepte/fruehstueck_quark_01.html' target='_blank'>Rezept & Varianten</a>",
@@ -14,7 +13,12 @@ window.schedule = [
 
   { time: "09:30", title: "Eiweißblock (klein)", description: "1 Ei (gekocht) + Magerquark 100 g", calories: 150 },
 
-  { time: "12:30", title: "Mittag (Rohkost/Salat erlaubt)", description: "Kartoffeln 250 g, Brokkoli 300 g, Hähnchenbrust 120 g, Olivenöl 1 TL (optional Rohkost/Salat dazu)", calories: 420 },
+ { time: "12:30",
+  title: "🍽️ Mittag – leberfreundlich & ausgewogen",
+  description:
+    "➡ <a href='rezepte/mittag_kartoffel_brokkoli_01.html' target='_blank'>Rezept & Varianten</a>",
+  calories: 420 },
+
   { time: "12:45", title: "Artischocke (nach dem Mittagessen)", description: "Leber / Galle", calories: 0 },
   { time: "13:00", title: "Spaziergang", description: "10–20 Min nach dem Mittagessen", calories: 0 },
 
@@ -22,7 +26,12 @@ window.schedule = [
 
   { time: "17:30", title: "L-Glutamin", description: "3–5 g", calories: 0 },
 
-  { time: "18:30", title: "Abendessen (warm & leicht)", description: "Buchweizen (gekocht) 60 g + Gemüse 250 g + Miso-Dashi 1–2 TL (spätestens 18:30)", calories: 220 },
+  { time: "18:30",
+  title: "🌙 Abendessen – warm & leicht",
+  description:
+    "➡ <a href='rezepte/abend_buchweizen_01.html' target='_blank'>Rezept & Varianten</a>",
+  calories: 220 },
+
   { time: "18:45", title: "Abendmedikamente (nach dem Abendessen)", description: "Eliquis/Apixaban 5 mg + Rosuvastatin + Ramipril", calories: 0 },
   { time: "18:50", title: "Spaziergang", description: "10–20 Min nach dem Abendessen", calories: 0 },
 
