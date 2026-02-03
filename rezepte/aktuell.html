@@ -1,214 +1,453 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aktuelle Variationen (Frühstück / Mittag / Abend)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Rezepte – aktuell (Woche 01–03)</title>
   <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:18px;line-height:1.55;color:#111;}
-    header{padding:14px 16px;border:1px solid #ddd;border-radius:14px;background:#f8fafc;}
-    h1{margin:0 0 8px;}
-    .muted{color:#444;}
-    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border-radius:999px;background:#fff;border:1px solid #e2e8f0;font-weight:800}
-    nav{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
-    nav a{display:inline-block;padding:8px 10px;border:1px solid #e2e8f0;border-radius:999px;background:#fff;text-decoration:none;color:#0f172a;font-weight:800}
-    nav a:hover{background:#f1f5f9}
-    section{margin-top:16px;border:1px solid #ddd;border-radius:14px;padding:14px}
-    section h2{margin:0 0 10px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-    .card{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#fff}
-    .card h3{margin:0 0 6px;font-size:16px}
-    .tag{display:inline-block;padding:3px 9px;border-radius:999px;background:#f1f5f9;border:1px solid #e2e8f0;margin:4px 6px 0 0;font-size:12px}
-    ul{margin:8px 0 0 18px}
-    li{margin:4px 0}
-    .hint{margin-top:10px;font-size:13px;color:#374151}
-    .hr{height:1px;background:#e5e7eb;margin:14px 0}
-    .toplink{font-size:13px;text-decoration:none;font-weight:800}
-    code{background:#f6f8fa; padding:2px 6px; border-radius:8px;}
+    :root{
+      --bg:#0b1220; --card:#ffffff; --ink:#0e172a; --muted:#475569;
+      --line:rgba(15,23,42,.12); --chip:#eef2ff; --chip2:#ecfeff;
+      --accent:#0ea5e9; --accent2:#22c55e; --warn:#f59e0b;
+      --shadow:0 14px 40px rgba(0,0,0,.25);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(1100px 700px at 15% 10%, rgba(14,165,233,.18), transparent 55%),
+                  radial-gradient(900px 650px at 85% 10%, rgba(34,197,94,.14), transparent 60%),
+                  linear-gradient(135deg, #0b1220 0%, #101a33 45%, #0b1326 100%);
+      color:#eaf0ff;
+      padding:18px;
+    }
+    .wrap{max-width:920px; margin:0 auto;}
+    header{
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:22px;
+      padding:18px 18px 14px;
+      box-shadow:none;
+      backdrop-filter: blur(6px);
+    }
+    h1{margin:0 0 8px; font-size:20px; letter-spacing:.2px}
+    .sub{margin:0; opacity:.9; font-size:13px; line-height:1.4}
+    .topbar{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+      margin-top:12px;
+    }
+    .nav{
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+    }
+    .nav a{
+      text-decoration:none; color:#fff; font-weight:800; font-size:13px;
+      padding:8px 12px; border-radius:999px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.18);
+    }
+    .nav a:hover{background:rgba(255,255,255,.16)}
+    .week{
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end;
+    }
+    .week span{font-size:13px; font-weight:800; opacity:.9}
+    .wbtn{
+      cursor:pointer; user-select:none;
+      padding:8px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.10);
+      color:#fff; font-weight:900; font-size:13px;
+    }
+    .wbtn.active{
+      background:rgba(255,255,255,.26);
+      border-color:rgba(255,255,255,.35);
+    }
+    .tools{
+      display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;
+    }
+    .toolbtn{
+      padding:9px 12px; border-radius:12px; border:none;
+      font-weight:900; cursor:pointer; color:#0b1220;
+      background:linear-gradient(135deg, rgba(14,165,233,.95), rgba(34,197,94,.95));
+    }
+    .toolbtn.secondary{
+      background:rgba(255,255,255,.14);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.18);
+    }
+
+    .card{
+      margin-top:14px;
+      background:rgba(255,255,255,.95);
+      color:var(--ink);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.16);
+    }
+    .section{
+      padding:18px;
+      border-top:1px solid var(--line);
+    }
+    .section:first-child{border-top:none}
+    .section h2{
+      margin:0 0 10px;
+      font-size:18px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; font-weight:900;
+      padding:6px 10px; border-radius:999px;
+      background:var(--chip);
+      border:1px solid rgba(15,23,42,.10);
+      color:#1e293b;
+    }
+    .badge.ok{background:#ecfeff}
+    .badge.warn{background:#fff7ed}
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+    @media (min-width: 860px){
+      .grid{grid-template-columns: 1.05fr .95fr;}
+    }
+    .box{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+    }
+    .box h3{
+      margin:0 0 8px;
+      font-size:14px;
+      color:#0b1220;
+    }
+    .muted{color:var(--muted); font-size:13px; line-height:1.45}
+    ul{margin:8px 0 0 18px; padding:0}
+    li{margin:6px 0; font-size:13.5px; line-height:1.45}
+    .kcal{
+      font-weight:900; color:#2563eb; font-size:12.5px;
+      margin-top:10px;
+    }
+    .rule{
+      display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;
+    }
+    .chip{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:7px 10px; border-radius:999px;
+      font-size:12.5px; font-weight:900;
+      border:1px solid rgba(15,23,42,.10);
+      background:#f8fafc;
+      color:#0b1220;
+    }
+    .chip b{color:#0b1220}
+    .weekBlock{
+      display:none;
+      border:1px dashed rgba(15,23,42,.18);
+      background:#f8fafc;
+    }
+    .weekBlock.active{display:block}
+    .weekTitle{
+      display:flex; justify-content:space-between; align-items:center;
+      margin:0 0 8px;
+      font-weight:1000; font-size:13.5px;
+    }
+    .small{font-size:12.5px; color:var(--muted)}
+    .anchor{scroll-margin-top:18px;}
+    footer{
+      opacity:.85;
+      font-size:12.5px;
+      margin:14px 6px 0;
+      text-align:center;
+    }
+    @media print{
+      body{background:#fff; color:#000; padding:0}
+      header, .tools{display:none !important}
+      .card{box-shadow:none; border:none; border-radius:0}
+      .section{page-break-inside:avoid}
+      a{color:#000; text-decoration:none}
+    }
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <header>
+      <h1>🍽️ Rezepte – aktuell (Woche 01–03)</h1>
+      <p class="sub">
+        Dieses Dokument ist die zentrale Stelle für deine Mahlzeiten-Varianten.
+        Dein Tagesplan verlinkt nur hierher: <b>#fruehstueck</b>, <b>#mittag</b>, <b>#abend</b>.
+      </p>
 
-<header id="top">
-  <h1>📘 Aktuelle Variationen</h1>
-  <div class="muted">
-    Diese Seite ist dein zentraler „Rezepte-Hub“. Der Tagesplan verlinkt nur hierher.
-    Für Wochenwechsel änderst du nur diese Datei (oder ersetzt den Inhalt).
+      <div class="topbar">
+        <nav class="nav">
+          <a href="#fruehstueck">🌅 Frühstück</a>
+          <a href="#mittag">🍽️ Mittag</a>
+          <a href="#abend">🌙 Abend</a>
+        </nav>
+
+        <div class="week" aria-label="Woche wählen">
+          <span>Woche:</span>
+          <button class="wbtn" data-week="1" type="button">01</button>
+          <button class="wbtn" data-week="2" type="button">02</button>
+          <button class="wbtn" data-week="3" type="button">03</button>
+        </div>
+      </div>
+
+      <div class="tools">
+        <button class="toolbtn" type="button" onclick="window.print()">🖨️ Drucken</button>
+        <button class="toolbtn secondary" type="button" onclick="jumpToCurrent()">🎯 Zur aktiven Woche springen</button>
+      </div>
+    </header>
+
+    <div class="card">
+
+      <!-- ===================== -->
+      <!-- FRÜHSTÜCK -->
+      <!-- ===================== -->
+      <section class="section anchor" id="fruehstueck">
+        <h2>🌅 Frühstück <span class="badge ok">leberfreundlich & sättigend</span></h2>
+
+        <div class="grid">
+          <div class="box">
+            <h3>Basis (fix)</h3>
+            <div class="muted">Diese Basis bleibt stabil. Variationen kommen über „Woche 01–03“ unten.</div>
+            <ul>
+              <li><b>Magerquark 250 g</b></li>
+              <li><b>Haferflocken 40–50 g</b> (Beta-Glucane → Leber/Blutzucker)</li>
+              <li><b>Beeren 80–100 g</b> (niedrige Fruktose, hohe Polyphenole)</li>
+              <li><b>Leinsamen geschrotet 1 TL</b> + <b>Flohsamen 1 TL</b></li>
+              <li><b>Leinöl 1 EL (≈ 10 g)</b> ✅</li>
+              <li><b>Kokosöl 5 g</b> (optional, morgens sinnvoll) ✅</li>
+              <li>Flavour (zuckerfrei) <i>oder</i> max. <b>5 g Xylit</b></li>
+              <li>Optional: <b>2–3 g Inulin</b> (wenn verträglich)</li>
+            </ul>
+            <div class="rule">
+              <div class="chip">🎯 Ziel: <b>stabiler Blutzucker</b></div>
+              <div class="chip">🧠 Kein „Fruktoseschwall“</div>
+              <div class="chip">🧪 Ballaststoffe täglich</div>
+            </div>
+            <div class="kcal">≈ 370–390 kcal (je nach Hafermenge)</div>
+          </div>
+
+          <div class="box">
+            <h3>Hinweise (verträglich & praktisch)</h3>
+            <ul>
+              <li><b>Inulin</b>: langsam einschleichen (z. B. 1 g → 2 g → 3 g). Bei Blähungen pausieren.</li>
+              <li><b>Xylit</b>: max. 5 g sind ok – bei Darmstress reduzieren.</li>
+              <li><b>Leinöl</b>: nicht erhitzen, dunkel/kühl lagern, nach Öffnen zügig verbrauchen.</li>
+              <li><b>Kokosöl</b>: 5 g sind „Mini-Dosis“. Nicht zusätzlich Nüsse/Butter/Sahne obendrauf.</li>
+            </ul>
+            <div class="rule">
+              <div class="chip">✅ Fette: <b>Leinöl + 5 g Kokos</b> (morgens)</div>
+              <div class="chip">⚠️ Kein Saft / Smoothie</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wochen-Varianten Frühstück -->
+        <div class="box weekBlock" data-week="1">
+          <div class="weekTitle">Woche 01 – Frühstücksvarianten <span class="small">1–2 Varianten rotieren</span></div>
+          <ul>
+            <li><b>Variante A:</b> Zimt + Vanille-Flavour + extra Beeren (100 g)</li>
+            <li><b>Variante B:</b> 1 EL Kakao (ungesüßt) + etwas Zimt (ohne extra Süßung)</li>
+            <li><b>Variante C:</b> 1 Kiwi <i>statt</i> Teil der Beeren (wenn Fruktose ok)</li>
+          </ul>
+        </div>
+
+        <div class="box weekBlock" data-week="2">
+          <div class="weekTitle">Woche 02 – Frühstücksvarianten <span class="small">leichte Abwechslung</span></div>
+          <ul>
+            <li><b>Variante A:</b> Beerenmix + 1–2 EL Skyr <i>statt</i> Teil des Quarks (wenn du magst)</li>
+            <li><b>Variante B:</b> Zitronenabrieb + Vanille, sehr frisch</li>
+            <li><b>Variante C:</b> 20 g Hafer + 20 g Buchweizenflocken (falls vorhanden)</li>
+          </ul>
+        </div>
+
+        <div class="box weekBlock" data-week="3">
+          <div class="weekTitle">Woche 03 – Frühstücksvarianten <span class="small">proteinbetont</span></div>
+          <ul>
+            <li><b>Variante A:</b> Quark 300 g + Hafer 35–40 g (Protein hoch, KH moderat)</li>
+            <li><b>Variante B:</b> Beeren 80 g + 1/2 Banane <i>nur wenn</i> Blutzucker stabil (sonst weglassen)</li>
+            <li><b>Variante C:</b> „Hafertag-light“: Hafer 60 g, Quark 150 g (nur gelegentlich)</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ===================== -->
+      <!-- MITTAG -->
+      <!-- ===================== -->
+      <section class="section anchor" id="mittag">
+        <h2>🍽️ Mittag <span class="badge">ausgewogen</span></h2>
+
+        <div class="grid">
+          <div class="box">
+            <h3>Basis (fix)</h3>
+            <ul>
+              <li><b>Gemüse groß</b> (z. B. Brokkoli / Kohl / Mischgemüse) 250–350 g</li>
+              <li><b>Stärkeportion moderat</b> (z. B. Kartoffeln 200–250 g <i>oder</i> Vollkornanteil klein)</li>
+              <li><b>Protein</b> 100–140 g (Hähnchen/Fisch <i>oder</i> Hülsenfrüchte/Tofu)</li>
+              <li><b>Olivenöl</b> 1 TL (5 g) oder Fett aus dem Protein</li>
+              <li>Optional: Rohkost/Salat, wenn gut verträglich</li>
+            </ul>
+            <div class="rule">
+              <div class="chip">🥦 Fokus: <b>Kreuzblütler</b></div>
+              <div class="chip">🚶 10–20 Min Spaziergang danach</div>
+            </div>
+            <div class="kcal">≈ 400–500 kcal (je nach Protein/Stärke)</div>
+          </div>
+
+          <div class="box">
+            <h3>Leber/Herz/Niere Regeln</h3>
+            <ul>
+              <li><b>Ultraverarbeitet</b> vermeiden (Fertigpizza, Backwaren, Transfette).</li>
+              <li><b>Protein</b> lieber „sauber“ (Hülsenfrüchte/Tofu/Fisch/Hähnchen) statt viel rotes Fleisch.</li>
+              <li><b>Salz</b> moderat (gerade bei Herz/Niere) – würzen mit Kräutern, Zitrone, Gewürzen.</li>
+              <li><b>Stärke</b> lieber Kartoffeln/Vollkorn klein statt Saft/Brotberge.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Wochen-Varianten Mittag -->
+        <div class="box weekBlock" data-week="1">
+          <div class="weekTitle">Woche 01 – Mittagsvarianten <span class="small">klassisch</span></div>
+          <ul>
+            <li><b>Variante A:</b> Kartoffeln + Brokkoli + Hähnchen (wie im Montag)</li>
+            <li><b>Variante B:</b> Linsen-Gemüse-Topf (rote Linsen) + 1 TL Olivenöl</li>
+            <li><b>Variante C:</b> Fisch (z. B. Lachs/Forelle) + Ofengemüse + Kartoffeln klein</li>
+          </ul>
+        </div>
+
+        <div class="box weekBlock" data-week="2">
+          <div class="weekTitle">Woche 02 – Mittagsvarianten <span class="small">pflanzlicher</span></div>
+          <ul>
+            <li><b>Variante A:</b> Kichererbsen + Gemüsepfanne + Joghurt-Zitronen-Dip</li>
+            <li><b>Variante B:</b> Tofu + Brokkoli/Blumenkohl + Reis klein (oder Kartoffeln)</li>
+            <li><b>Variante C:</b> „Mediterran“: Bohnen/Erbsen + Gemüse + Olivenöl 1 TL</li>
+          </ul>
+        </div>
+
+        <div class="box weekBlock" data-week="3">
+          <div class="weekTitle">Woche 03 – Mittagsvarianten <span class="small">sehr leicht</span></div>
+          <ul>
+            <li><b>Variante A:</b> Gemüse groß + Protein + kaum Stärke (wenn du „Reißleine“ brauchst)</li>
+            <li><b>Variante B:</b> Kartoffeln nur 150–180 g, dafür mehr Gemüse</li>
+            <li><b>Variante C:</b> Hülsenfrüchte-Bowl: Linsen/Erbsen + Gemüse + Kräuter</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ===================== -->
+      <!-- ABEND -->
+      <!-- ===================== -->
+      <section class="section anchor" id="abend">
+        <h2>🌙 Abend <span class="badge warn">warm & leicht</span></h2>
+
+        <div class="grid">
+          <div class="box">
+            <h3>Basis (fix)</h3>
+            <ul>
+              <li><b>Gemüse 250 g</b> (mild: Zucchini, Karotte, Spinat, Mischgemüse)</li>
+              <li><b>Buchweizen (gekocht) 60 g</b> oder vergleichbar (Portion klein)</li>
+              <li><b>Miso-Dashi 1–2 TL</b> (wenn Salz passt) / sonst Kräuterbrühe mild</li>
+              <li>Optional: extra Protein klein (z. B. 100 g Quark später, wie im Plan)</li>
+            </ul>
+            <div class="rule">
+              <div class="chip">⏰ Spätestens: <b>18:30</b></div>
+              <div class="chip">🚶 Spaziergang danach</div>
+            </div>
+            <div class="kcal">≈ 200–320 kcal (je nach Zusatz)</div>
+          </div>
+
+          <div class="box">
+            <h3>Hinweise (Schlaf & Leber)</h3>
+            <ul>
+              <li>Abends keine „Zuckerwelle“ (kein Saft, kein süßer Snack).</li>
+              <li>Wenn Hunger: lieber <b>Quark 100 g</b> (wie im Plan) statt Brot.</li>
+              <li>Miso: bei Blutdruck/Salzempfindlichkeit eher <b>sparsam</b>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Wochen-Varianten Abend -->
+        <div class="box weekBlock" data-week="1">
+          <div class="weekTitle">Woche 01 – Abendvarianten <span class="small">standard</span></div>
+          <ul>
+            <li><b>Variante A:</b> Buchweizen + Gemüse + Miso-Dashi (wie Montag)</li>
+            <li><b>Variante B:</b> Gemüsecremesuppe (ohne Sahne) + Buchweizen klein</li>
+            <li><b>Variante C:</b> Gemüsepfanne + Ei (1) + Kräuter</li>
+          </ul>
+        </div>
+
+        <div class="box weekBlock" data-week="2">
+          <div class="weekTitle">Woche 02 – Abendvarianten <span class="small">sehr mild</span></div>
+          <ul>
+            <li><b>Variante A:</b> Spinat/Zucchini + Buchweizen, sehr wenig Miso</li>
+            <li><b>Variante B:</b> Karotten-Ingwer-Suppe (Ingwer mild) + Gemüsebeilage</li>
+            <li><b>Variante C:</b> Gemüse + Tofu klein (wenn du abends Protein brauchst)</li>
+          </ul>
+        </div>
+
+        <div class="box weekBlock" data-week="3">
+          <div class="weekTitle">Woche 03 – Abendvarianten <span class="small">low-carb</span></div>
+          <ul>
+            <li><b>Variante A:</b> Gemüse groß + Protein klein, kaum Stärke</li>
+            <li><b>Variante B:</b> Buchweizen halbieren (30 g) + mehr Gemüse</li>
+            <li><b>Variante C:</b> „Quark-Abend“: 200 g Quark + Gurke/Tomate (wenn verträglich)</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      Tipp: Woche wählen → Plan bleibt gleich, nur die Inhalte hier rotieren. Links im Tagesplan springen direkt zu Frühstück/Mittag/Abend.
+    </footer>
   </div>
 
-  <div class="row">
-    <span class="pill">📅 Woche: <span id="weekLabel">01</span></span>
-    <span class="pill">🎯 Ziel: 1500 kcal · Leber/Herz/Niere</span>
-  </div>
+  <script>
+    (function(){
+      var KEY = "rezepteAktuellWeek";
+      var btns = document.querySelectorAll(".wbtn");
+      var blocks = document.querySelectorAll(".weekBlock");
 
-  <nav>
-    <a href="#fruehstueck">🌅 Frühstück</a>
-    <a href="#mittag">🍽️ Mittag</a>
-    <a href="#abend">🌙 Abend</a>
-  </nav>
+      function setActiveWeek(w){
+        w = String(w || "1");
+        try{ localStorage.setItem(KEY, w); }catch(e){}
 
-  <div class="hint">
-    Direktlinks (für den Plan):
-    <code>rezepte/aktuell.html#fruehstueck</code> ·
-    <code>rezepte/aktuell.html#mittag</code> ·
-    <code>rezepte/aktuell.html#abend</code>
-  </div>
-</header>
+        for (var i=0;i<btns.length;i++){
+          btns[i].classList.toggle("active", btns[i].getAttribute("data-week") === w);
+        }
+        for (var j=0;j<blocks.length;j++){
+          blocks[j].classList.toggle("active", blocks[j].getAttribute("data-week") === w);
+        }
+      }
 
-<!-- ========================================= -->
-<section id="fruehstueck">
-  <h2>🌅 Frühstück – leberfreundlich & sättigend</h2>
+      function loadWeek(){
+        var w = "1";
+        try{
+          w = localStorage.getItem(KEY) || "1";
+        }catch(e){}
+        if (w !== "1" && w !== "2" && w !== "3") w = "1";
+        setActiveWeek(w);
+      }
 
-  <div class="grid">
+      for (var i=0;i<btns.length;i++){
+        (function(b){
+          b.addEventListener("click", function(){
+            setActiveWeek(b.getAttribute("data-week"));
+          });
+        })(btns[i]);
+      }
 
-    <div class="card">
-      <h3>Variante F1: Quark · Hafer · Beeren (Basis)</h3>
-      <span class="tag">≈ 350–380 kcal</span>
-      <span class="tag">stabiler Blutzucker</span>
-      <span class="tag">Ballaststoffe</span>
-      <ul>
-        <li>250 g Magerquark</li>
-        <li>40–50 g Haferflocken</li>
-        <li>80–100 g Beeren</li>
-        <li>1 TL Leinsamen (geschrotet)</li>
-        <li>Optional: 1 TL Flohsamen</li>
-        <li>Optional: 2–3 g Inulin</li>
-      </ul>
-      <div class="hint">Süße: Flavour oder sehr sparsam Xylit.</div>
-    </div>
+      // öffentlich für Button oben
+      window.jumpToCurrent = function(){
+        var w = "1";
+        try{ w = localStorage.getItem(KEY) || "1"; }catch(e){}
+        alert("Aktive Woche: 0" + w + " (gespeichert).");
+      };
 
-    <div class="card">
-      <h3>Variante F2: Protein-Fokus (wenn mehr Hunger)</h3>
-      <span class="tag">≈ 320–380 kcal</span>
-      <span class="tag">mehr Eiweiß</span>
-      <ul>
-        <li>300 g Magerquark (oder 250 g + 100 g Skyr)</li>
-        <li>20–30 g Haferflocken</li>
-        <li>Beeren wie oben</li>
-        <li>Leinsamen/Flohsamen optional</li>
-      </ul>
-      <div class="hint">Gut an Tagen mit Bewegung/Kraft.</div>
-    </div>
-
-    <div class="card">
-      <h3>Variante F3: „Minimal“ (leicht & schnell)</h3>
-      <span class="tag">≈ 250–320 kcal</span>
-      <span class="tag">sehr schnell</span>
-      <ul>
-        <li>250–300 g Magerquark</li>
-        <li>Beeren 80–100 g</li>
-        <li>1 TL Leinsamen</li>
-      </ul>
-      <div class="hint">Wenn du später am Vormittag eh den Eiweißblock hast.</div>
-    </div>
-
-  </div>
-
-  <div class="hr"></div>
-  <a class="toplink" href="#top">⬆ zurück nach oben</a>
-</section>
-
-<!-- ========================================= -->
-<section id="mittag">
-  <h2>🍽️ Mittag – ausgewogen (Leber/Herz/Niere)</h2>
-
-  <div class="grid">
-
-    <div class="card">
-      <h3>Variante M1: Kartoffeln · Brokkoli · Hähnchen</h3>
-      <span class="tag">≈ 420 kcal</span>
-      <span class="tag">klassisch</span>
-      <ul>
-        <li>250 g Kartoffeln</li>
-        <li>300 g Brokkoli</li>
-        <li>120 g Hähnchenbrust</li>
-        <li>1 TL Olivenöl (am Ende)</li>
-      </ul>
-      <div class="hint">Salz sparsam. Zitrone/Kräuter = Geschmack ohne Last.</div>
-    </div>
-
-    <div class="card">
-      <h3>Variante M2: Linsen-Bowl (pflanzlich)</h3>
-      <span class="tag">≈ 400–500 kcal</span>
-      <span class="tag">Ballaststoffe</span>
-      <ul>
-        <li>150–200 g gekochte Linsen</li>
-        <li>Gemüsepfanne 300–400 g</li>
-        <li>1 TL Olivenöl</li>
-      </ul>
-      <div class="hint">Sehr leberfreundlich + macht satt.</div>
-    </div>
-
-    <div class="card">
-      <h3>Variante M3: Fisch-Tag (1–2×/Woche)</h3>
-      <span class="tag">variabel</span>
-      <span class="tag">Omega-3</span>
-      <ul>
-        <li>Fisch in moderater Portion</li>
-        <li>Gemüse groß</li>
-        <li>Beilage klein (Kartoffel/Reis)</li>
-      </ul>
-      <div class="hint">Wenn du willst, machen wir dir eine exakte Gramm-Variante.</div>
-    </div>
-
-  </div>
-
-  <div class="hr"></div>
-  <a class="toplink" href="#top">⬆ zurück nach oben</a>
-</section>
-
-<!-- ========================================= -->
-<section id="abend">
-  <h2>🌙 Abend – warm & leicht</h2>
-
-  <div class="grid">
-
-    <div class="card">
-      <h3>Variante A1: Buchweizen + Gemüse + Miso (mild)</h3>
-      <span class="tag">≈ 220–320 kcal</span>
-      <span class="tag">warm</span>
-      <ul>
-        <li>Buchweizen (gekocht) nach Plan</li>
-        <li>Gemüse 250–350 g</li>
-        <li>Miso 1 TL (Salz beachten)</li>
-      </ul>
-      <div class="hint">Wenn Salz sensibel: Miso reduzieren oder weglassen.</div>
-    </div>
-
-    <div class="card">
-      <h3>Variante A2: Gemüse-Suppe + Eiweiß</h3>
-      <span class="tag">≈ 250–350 kcal</span>
-      <span class="tag">sehr leicht</span>
-      <ul>
-        <li>Gemüsesuppe (viel Gemüse)</li>
-        <li>Optional: Tofu/Ei oder später Quark (20:30)</li>
-      </ul>
-      <div class="hint">Super für ruhige Nächte.</div>
-    </div>
-
-    <div class="card">
-      <h3>Variante A3: Ultra-einfach (Gemüse + Brühe mild)</h3>
-      <span class="tag">≈ 150–260 kcal</span>
-      <span class="tag">minimal</span>
-      <ul>
-        <li>Gedünstetes Gemüse 300–400 g</li>
-        <li>Milde Brühe sparsam</li>
-      </ul>
-      <div class="hint">Wenn du wenig Appetit hast oder „zu voll“ bist.</div>
-    </div>
-
-  </div>
-
-  <div class="hr"></div>
-  <a class="toplink" href="#top">⬆ zurück nach oben</a>
-</section>
-
-<script>
-  // Optional: Nur Anzeige, kannst du später manuell ändern (01/02/03)
-  // Einfach hier die Zahl anpassen:
-  document.getElementById("weekLabel").textContent = "01";
-</script>
-
+      loadWeek();
+    })();
+  </script>
 </body>
 </html>
