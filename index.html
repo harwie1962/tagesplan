@@ -1967,10 +1967,11 @@
         if (minutesUntil < 0) minutesUntil += 1440;
 
         // 2 Minuten vorher auslösen
-        if (minutesUntil <= 2) {
-          fireReminder(nextItem);
-          lastNotifiedIndex = nextIndex;
+        if (minutesUntil <= 2 && minutesUntil >= -1) {
+        fireReminder(nextItem);
+        lastNotifiedIndex = nextIndex;
         }
+
       }
 
       function requestNotificationPermission() {
@@ -2313,3 +2314,4 @@
     </script>
   </body>
 </html>
+
