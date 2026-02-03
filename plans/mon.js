@@ -6,7 +6,7 @@ window.schedule = [
     time: "08:00",
     title: "🌅 Frühstück – leberfreundlich & sättigend",
     description:
-      "➡ <a href='rezepte/fruehstueck_quark_01.html' target='_blank'>Rezept & Varianten</a>",
+      "➡ <a href='rezepte/aktuell.html#fruehstueck' target='_blank'>Varianten ansehen</a>",
     calories: 350
   },
 
@@ -17,91 +17,36 @@ window.schedule = [
       "Prednisolon + Eliquis/Apixaban 5 mg + Finerenon 10 mg + Bisoprolol + Amlodipin + Ezetimib + Vitamin D3/K2 + Omega-3 + Q10 + Vitamin-B-Komplex + Magnesium-Malat",
     calories: 0
   },
-  {
-    time: "08:30",
-    title: "Vitamin C",
-    description: "200–250 mg, nach dem Frühstück",
-    calories: 0
-  },
+  { time: "08:10", title: "Vitamin C", description: "200–250 mg, nach dem Frühstück", calories: 0 },
 
-  {
-    time: "09:30",
-    title: "Eiweißblock (klein)",
-    description: "1 Ei (gekocht) oder kleine Quarkportion",
-    calories: 150
-  },
+  { time: "09:30", title: "Eiweißblock (klein)", description: "1 Ei (gekocht) + Magerquark 100 g", calories: 150 },
 
   {
     time: "12:30",
-    title: "🍽️ Mittag – leberfreundlich & ausgewogen",
+    title: "🍽️ Mittag – ausgewogen",
     description:
-      "➡ <a href='rezepte/mittag_kartoffel_brokkoli_01.html' target='_blank'>Rezept & Varianten</a>",
+      "➡ <a href='rezepte/aktuell.html#mittag' target='_blank'>Varianten ansehen</a>",
     calories: 420
   },
-  {
-    time: "12:45",
-    title: "Artischocke",
-    description: "nach dem Mittagessen – Leber / Galle",
-    calories: 0
-  },
-  {
-    time: "13:00",
-    title: "Spaziergang",
-    description: "10–20 Minuten nach dem Mittagessen",
-    calories: 0
-  },
+  { time: "12:45", title: "Artischocke (nach dem Mittagessen)", description: "Leber / Galle", calories: 0 },
+  { time: "13:00", title: "Spaziergang", description: "10–20 Min nach dem Mittagessen", calories: 0 },
 
-  {
-    time: "15:30",
-    title: "Kleine Kohlenhydratportion",
-    description: "z. B. Haferflocken mit Wasser oder Tee",
-    calories: 115
-  },
+  { time: "15:30", title: "Kleine Kohlenhydratportion", description: "Haferflocken 30 g + Wasser oder Tee", calories: 115 },
 
-  {
-    time: "17:30",
-    title: "L-Glutamin",
-    description: "3–5 g",
-    calories: 0
-  },
+  { time: "17:30", title: "L-Glutamin", description: "3–5 g", calories: 0 },
 
   {
     time: "18:30",
     title: "🌙 Abendessen – warm & leicht",
     description:
-      "➡ <a href='rezepte/abend_buchweizen_01.html' target='_blank'>Rezept & Varianten</a>",
+      "➡ <a href='rezepte/aktuell.html#abend' target='_blank'>Varianten ansehen</a>",
     calories: 220
   },
-  {
-    time: "18:45",
-    title: "Abendmedikamente",
-    description: "Eliquis/Apixaban 5 mg + Rosuvastatin + Ramipril",
-    calories: 0
-  },
-  {
-    time: "18:50",
-    title: "Spaziergang",
-    description: "10–20 Minuten nach dem Abendessen",
-    calories: 0
-  },
+  { time: "18:45", title: "Abendmedikamente (nach dem Abendessen)", description: "Eliquis/Apixaban 5 mg + Rosuvastatin + Ramipril", calories: 0 },
+  { time: "18:50", title: "Spaziergang", description: "10–20 Min nach dem Abendessen", calories: 0 },
 
-  {
-    time: "20:30",
-    title: "Optional (bei Hunger)",
-    description: "kleine Eiweißportion",
-    calories: 70
-  },
-  {
-    time: "20:45",
-    title: "Zink",
-    description: "nur mit Wasser",
-    calories: 0
-  },
+  { time: "20:30", title: "Optional (wenn Hunger)", description: "Magerquark 100 g", calories: 70 },
+  { time: "20:45", title: "Zink", description: "nach Abendessen, nur mit Wasser", calories: 0 },
 
-  {
-    time: "22:00",
-    title: "Magnesium-Bisglycinat",
-    description: "abends, magenschonend",
-    calories: 0
-  }
+  { time: "22:00", title: "Magnesium-Bisglycinat", description: "abends, magenschonend", calories: 0 }
 ];
