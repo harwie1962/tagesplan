@@ -17,7 +17,7 @@ window.schedule = [
       "Prednisolon + Eliquis/Apixaban 5 mg + Finerenon 10 mg + Bisoprolol + Amlodipin + Ezetimib + Vitamin D3/K2 + Omega-3 + Q10 + Vitamin-B-Komplex + Magnesium-Malat",
     calories: 0
   },
-  { time: "08:10", title: "Vitamin C", description: "200–250 mg, nach dem Frühstück", calories: 0 },
+  { time: "08:36", title: "Vitamin C", description: "200–250 mg, nach dem Frühstück", calories: 0 },
 
   { time: "09:30", title: "Eiweißblock (klein)", description: "1 Ei (gekocht) + Magerquark 100 g", calories: 150 },
 
