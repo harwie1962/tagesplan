@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aktuelle Variationen (Frühstück / Mittag / Abend)</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:18px;line-height:1.55;color:#111;}
+    header{padding:14px 16px;border:1px solid #ddd;border-radius:14px;background:#f8fafc;}
+    h1{margin:0 0 8px;}
+    .muted{color:#444;}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border-radius:999px;background:#fff;border:1px solid #e2e8f0;font-weight:800}
+    nav{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+    nav a{display:inline-block;padding:8px 10px;border:1px solid #e2e8f0;border-radius:999px;background:#fff;text-decoration:none;color:#0f172a;font-weight:800}
+    nav a:hover{background:#f1f5f9}
+    section{margin-top:16px;border:1px solid #ddd;border-radius:14px;padding:14px}
+    section h2{margin:0 0 10px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+    .card{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#fff}
+    .card h3{margin:0 0 6px;font-size:16px}
+    .tag{display:inline-block;padding:3px 9px;border-radius:999px;background:#f1f5f9;border:1px solid #e2e8f0;margin:4px 6px 0 0;font-size:12px}
+    ul{margin:8px 0 0 18px}
+    li{margin:4px 0}
+    .hint{margin-top:10px;font-size:13px;color:#374151}
+    .hr{height:1px;background:#e5e7eb;margin:14px 0}
+    .toplink{font-size:13px;text-decoration:none;font-weight:800}
+    code{background:#f6f8fa; padding:2px 6px; border-radius:8px;}
+  </style>
+</head>
+<body>
+
+<header id="top">
+  <h1>📘 Aktuelle Variationen</h1>
+  <div class="muted">
+    Diese Seite ist dein zentraler „Rezepte-Hub“. Der Tagesplan verlinkt nur hierher.
+    Für Wochenwechsel änderst du nur diese Datei (oder ersetzt den Inhalt).
+  </div>
+
+  <div class="row">
+    <span class="pill">📅 Woche: <span id="weekLabel">01</span></span>
+    <span class="pill">🎯 Ziel: 1500 kcal · Leber/Herz/Niere</span>
+  </div>
+
+  <nav>
+    <a href="#fruehstueck">🌅 Frühstück</a>
+    <a href="#mittag">🍽️ Mittag</a>
+    <a href="#abend">🌙 Abend</a>
+  </nav>
+
+  <div class="hint">
+    Direktlinks (für den Plan):
+    <code>rezepte/aktuell.html#fruehstueck</code> ·
+    <code>rezepte/aktuell.html#mittag</code> ·
+    <code>rezepte/aktuell.html#abend</code>
+  </div>
+</header>
+
+<!-- ========================================= -->
+<section id="fruehstueck">
+  <h2>🌅 Frühstück – leberfreundlich & sättigend</h2>
+
+  <div class="grid">
+
+    <div class="card">
+      <h3>Variante F1: Quark · Hafer · Beeren (Basis)</h3>
+      <span class="tag">≈ 350–380 kcal</span>
+      <span class="tag">stabiler Blutzucker</span>
+      <span class="tag">Ballaststoffe</span>
+      <ul>
+        <li>250 g Magerquark</li>
+        <li>40–50 g Haferflocken</li>
+        <li>80–100 g Beeren</li>
+        <li>1 TL Leinsamen (geschrotet)</li>
+        <li>Optional: 1 TL Flohsamen</li>
+        <li>Optional: 2–3 g Inulin</li>
+      </ul>
+      <div class="hint">Süße: Flavour oder sehr sparsam Xylit.</div>
+    </div>
+
+    <div class="card">
+      <h3>Variante F2: Protein-Fokus (wenn mehr Hunger)</h3>
+      <span class="tag">≈ 320–380 kcal</span>
+      <span class="tag">mehr Eiweiß</span>
+      <ul>
+        <li>300 g Magerquark (oder 250 g + 100 g Skyr)</li>
+        <li>20–30 g Haferflocken</li>
+        <li>Beeren wie oben</li>
+        <li>Leinsamen/Flohsamen optional</li>
+      </ul>
+      <div class="hint">Gut an Tagen mit Bewegung/Kraft.</div>
+    </div>
+
+    <div class="card">
+      <h3>Variante F3: „Minimal“ (leicht & schnell)</h3>
+      <span class="tag">≈ 250–320 kcal</span>
+      <span class="tag">sehr schnell</span>
+      <ul>
+        <li>250–300 g Magerquark</li>
+        <li>Beeren 80–100 g</li>
+        <li>1 TL Leinsamen</li>
+      </ul>
+      <div class="hint">Wenn du später am Vormittag eh den Eiweißblock hast.</div>
+    </div>
+
+  </div>
+
+  <div class="hr"></div>
+  <a class="toplink" href="#top">⬆ zurück nach oben</a>
+</section>
+
+<!-- ========================================= -->
+<section id="mittag">
+  <h2>🍽️ Mittag – ausgewogen (Leber/Herz/Niere)</h2>
+
+  <div class="grid">
+
+    <div class="card">
+      <h3>Variante M1: Kartoffeln · Brokkoli · Hähnchen</h3>
+      <span class="tag">≈ 420 kcal</span>
+      <span class="tag">klassisch</span>
+      <ul>
+        <li>250 g Kartoffeln</li>
+        <li>300 g Brokkoli</li>
+        <li>120 g Hähnchenbrust</li>
+        <li>1 TL Olivenöl (am Ende)</li>
+      </ul>
+      <div class="hint">Salz sparsam. Zitrone/Kräuter = Geschmack ohne Last.</div>
+    </div>
+
+    <div class="card">
+      <h3>Variante M2: Linsen-Bowl (pflanzlich)</h3>
+      <span class="tag">≈ 400–500 kcal</span>
+      <span class="tag">Ballaststoffe</span>
+      <ul>
+        <li>150–200 g gekochte Linsen</li>
+        <li>Gemüsepfanne 300–400 g</li>
+        <li>1 TL Olivenöl</li>
+      </ul>
+      <div class="hint">Sehr leberfreundlich + macht satt.</div>
+    </div>
+
+    <div class="card">
+      <h3>Variante M3: Fisch-Tag (1–2×/Woche)</h3>
+      <span class="tag">variabel</span>
+      <span class="tag">Omega-3</span>
+      <ul>
+        <li>Fisch in moderater Portion</li>
+        <li>Gemüse groß</li>
+        <li>Beilage klein (Kartoffel/Reis)</li>
+      </ul>
+      <div class="hint">Wenn du willst, machen wir dir eine exakte Gramm-Variante.</div>
+    </div>
+
+  </div>
+
+  <div class="hr"></div>
+  <a class="toplink" href="#top">⬆ zurück nach oben</a>
+</section>
+
+<!-- ========================================= -->
+<section id="abend">
+  <h2>🌙 Abend – warm & leicht</h2>
+
+  <div class="grid">
+
+    <div class="card">
+      <h3>Variante A1: Buchweizen + Gemüse + Miso (mild)</h3>
+      <span class="tag">≈ 220–320 kcal</span>
+      <span class="tag">warm</span>
+      <ul>
+        <li>Buchweizen (gekocht) nach Plan</li>
+        <li>Gemüse 250–350 g</li>
+        <li>Miso 1 TL (Salz beachten)</li>
+      </ul>
+      <div class="hint">Wenn Salz sensibel: Miso reduzieren oder weglassen.</div>
+    </div>
+
+    <div class="card">
+      <h3>Variante A2: Gemüse-Suppe + Eiweiß</h3>
+      <span class="tag">≈ 250–350 kcal</span>
+      <span class="tag">sehr leicht</span>
+      <ul>
+        <li>Gemüsesuppe (viel Gemüse)</li>
+        <li>Optional: Tofu/Ei oder später Quark (20:30)</li>
+      </ul>
+      <div class="hint">Super für ruhige Nächte.</div>
+    </div>
+
+    <div class="card">
+      <h3>Variante A3: Ultra-einfach (Gemüse + Brühe mild)</h3>
+      <span class="tag">≈ 150–260 kcal</span>
+      <span class="tag">minimal</span>
+      <ul>
+        <li>Gedünstetes Gemüse 300–400 g</li>
+        <li>Milde Brühe sparsam</li>
+      </ul>
+      <div class="hint">Wenn du wenig Appetit hast oder „zu voll“ bist.</div>
+    </div>
+
+  </div>
+
+  <div class="hr"></div>
+  <a class="toplink" href="#top">⬆ zurück nach oben</a>
+</section>
+
+<script>
+  // Optional: Nur Anzeige, kannst du später manuell ändern (01/02/03)
+  // Einfach hier die Zahl anpassen:
+  document.getElementById("weekLabel").textContent = "01";
+</script>
+
+</body>
+</html>
