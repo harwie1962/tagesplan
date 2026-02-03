@@ -19,7 +19,7 @@ window.schedule = [
   },
   { time: "08:10", title: "Vitamin C", description: "200–250 mg, nach dem Frühstück", calories: 0 },
 
-  { time: "11:35", title: "Eiweißblock (klein)", description: "1 Ei (gekocht) + Magerquark 100 g", calories: 150 },
+  { time: "11:45", title: "Eiweißblock (klein)", description: "1 Ei (gekocht) + Magerquark 100 g", calories: 150 },
 
   {
     time: "12:30",
